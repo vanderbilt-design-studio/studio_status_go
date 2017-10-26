@@ -152,7 +152,7 @@ func isDoorOpen() bool {
 func drawDesignStudio() {
 	openvg.Img(0, 0, logo)
 	openvg.FillRGB(BLACK[0], BLACK[1], BLACK[2], 1)
-	openvg.TextMid(960, 0, "Design Studio", "serif", 200)
+	openvg.TextMid(960, 0, "Design Studio", "mono", 200)
 }
 
 func isOpen() bool {
@@ -198,7 +198,7 @@ func drawOpen(open bool) {
 		text = "Open"
 	}
 	openvg.FillRGB(fill[0], fill[1], fill[2], 1)
-	openvg.TextMid(960, 203, text, "serif", 400)
+	openvg.TextMid(960, 203, text, "mono", 400)
 }
 
 func drawMentorOnDuty() {
@@ -207,7 +207,7 @@ func drawMentorOnDuty() {
 		dutyStr := "Mentor on Duty: "
 		now := time.Now()
 		dutyStr += names[dow(now.Day(), int(now.Month()), now.Year())][((now.Hour() - 12) / 2)]
-		openvg.TextMid(960, 1075, dutyStr, "serif", 100)
+		openvg.TextMid(960, 1075, dutyStr, "mono", 100)
 	}
 }
 
