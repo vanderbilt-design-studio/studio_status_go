@@ -19,19 +19,10 @@ var (
 )
 
 func main() {
-	stdio := make(chan string, 1)
-	go func() { reader := bufio.NewReader(os.Stdin); read, _ := reader.ReadString('\n'); stdio <- read }()
 	width, height = openvg.Init()
 	defer openvg.Finish()
 	setup()
 	for {
-		select {
-		case input := <-stdio:
-			if input == exitCode {
-				fmt.Println("Exiting!")
-				break
-			}
-		}
 		openvg.Start(width, height)
 		draw()
 		openvg.End()
@@ -185,7 +176,7 @@ func dow(d, m, y int) int {
 		m += 12
 		y--
 	}
-	return (d + int((m+1)*2.6) + y + int(y/4) + 6*int(y/100) +
+	return (d + int((float32(m)+1.0)*float32(2.6)) + y + int(y/4) + 6*int(y/100) +
 		int(y/400) + 6) %
 		7
 }
