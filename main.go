@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ajstarks/openvg"
+	"github.com/sameer/openvg"
 	"github.com/mrmorphic/hwio"
 	"github.com/tarm/serial"
 	"os"
