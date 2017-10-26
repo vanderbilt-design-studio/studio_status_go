@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"github.com/ajstarks/openvg"
 	"github.com/mrmorphic/hwio"
 	"github.com/tarm/serial"
@@ -39,18 +38,18 @@ var names = [][]string{
 	{}}
 
 var (
-	BLUE   = [3]uint8{0, 67, 123}
-	GREEN  = [3]uint8{0, 95, 77}
-	PURPLE = [3]uint8{157, 0, 113}
-	BLACK  = [3]uint8{0, 0, 0}
-	BROWN  = [3]uint8{98, 51, 30}
-	RED    = [3]uint8{199, 0, 43}
-	ORANGE = [3]uint8{255, 104, 2}
-	YELLOW = [3]uint8{255, 178, 0}
+	BLUE = openvg.RGB{0, 67, 123}
+	GREEN  = openvg.RGB{0, 95, 77}
+	PURPLE = openvg.RGB{157, 0, 113}
+	BLACK  = openvg.RGB{0, 0, 0}
+	BROWN  = openvg.RGB{98, 51, 30}
+	RED    = openvg.RGB{199, 0, 43}
+	ORANGE = openvg.RGB{255, 104, 2}
+	YELLOW = openvg.RGB{255, 178, 0}
 )
 
 var (
-	isGPIOAvailable        = false
+	isGPIOAvailable        = true
 	isDoorArduinoAvailable = false
 	gpio17                 hwio.Pin
 	gpio27                 hwio.Pin
@@ -63,10 +62,12 @@ func setup() {
 		var err error = nil
 		gpio17, err = hwio.GetPin("gpio17")
 		if err != nil {
+			fmt.Println(err)
 			isGPIOAvailable = false
 		}
 		gpio27, err = hwio.GetPin("gpio27")
 		if err != nil {
+			fmt.Println(err)
 			isGPIOAvailable = false
 		}
 		if isGPIOAvailable {
@@ -81,10 +82,11 @@ func setup() {
 		fmt.Println("Acquired serial port!")
 		doorArduino = serialPort
 	}
-	if file, err := os.Open("logo.png"); err != nil {
+	if file, err := os.Open("./logo.png"); err != nil {
 		logo, _, _ = image.Decode(file)
 		file.Close()
 	} else {
+		fmt.Println(err)
 		file.Close()
 	}
 }
@@ -141,9 +143,11 @@ func isDoorOpen() bool {
 }
 
 func drawDesignStudio() {
-	openvg.Img(0, 0, logo)
-	openvg.FillRGB(BLACK[0], BLACK[1], BLACK[2], 1)
-	openvg.TextMid(960, 0, "Design Studio", "mono", 200)
+	if logo != nil {
+		openvg.Img(0, 0, logo)
+	}
+	openvg.FillRGB(BLACK.Red, BLACK.Green, BLACK.Blue, 1)
+	openvg.TextMid(960, openvg.TextHeight("mono", 200), "Design Studio", "mono", 100)
 }
 
 func isOpen() bool {
@@ -188,13 +192,13 @@ func drawOpen(open bool) {
 		fill = GREEN
 		text = "Open"
 	}
-	openvg.FillRGB(fill[0], fill[1], fill[2], 1)
-	openvg.TextMid(960, 203, text, "mono", 400)
+	openvg.FillRGB(fill.Red, fill.Green, fill.Blue, 1)
+	openvg.TextMid(960, 203, text, "mono", 300)
 }
 
 func drawMentorOnDuty() {
 	if isOpen() && getSwitchValue() == openNormal {
-		openvg.FillRGB(BLACK[0], BLACK[1], BLACK[2], 1)
+		openvg.FillRGB(BLACK.Red, BLACK.Green, BLACK.Blue, 1)
 		dutyStr := "Mentor on Duty: "
 		now := time.Now()
 		dutyStr += names[dow(now.Day(), int(now.Month()), now.Year())][((now.Hour() - 12) / 2)]
@@ -222,10 +226,13 @@ func getSwitchValue() int {
 					} else {
 						return closedForced
 					}
+				} else {
+					fmt.Println(err)
 				}
 			}
+		} else {
+			fmt.Println(err)
 		}
-
 	}
 	return openNormal
 }
