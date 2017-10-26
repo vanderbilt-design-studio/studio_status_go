@@ -147,7 +147,7 @@ func drawDesignStudio() {
 		openvg.Img(0, 0, logo)
 	}
 	openvg.FillRGB(BLACK.Red, BLACK.Green, BLACK.Blue, 1)
-	openvg.TextMid(960, openvg.TextHeight("mono", 200), "Design Studio", "mono", 100)
+	openvg.TextMid(960, openvg.TextHeight(defaultFont, 200), "Design Studio", defaultFont, 100)
 }
 
 func isOpen() bool {
@@ -193,7 +193,7 @@ func drawOpen(open bool) {
 		text = "Open"
 	}
 	openvg.FillRGB(fill.Red, fill.Green, fill.Blue, 1)
-	openvg.TextMid(960, 203, text, "mono", 300)
+	openvg.TextMid(960, 203, text, defaultFont, 300)
 }
 
 func drawMentorOnDuty() {
@@ -202,7 +202,7 @@ func drawMentorOnDuty() {
 		dutyStr := "Mentor on Duty: "
 		now := time.Now()
 		dutyStr += names[dow(now.Day(), int(now.Month()), now.Year())][((now.Hour() - 12) / 2)]
-		openvg.TextMid(960, 1075, dutyStr, "mono", 100)
+		openvg.TextMid(960, 1075, dutyStr, defaultFont, 100)
 	}
 }
 
@@ -210,6 +210,7 @@ const (
 	openNormal   = 1
 	openForced   = 2
 	closedForced = 0
+	defaultFont = "mono"
 )
 
 func getSwitchValue() int {
