@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ajstarks/openvg"
+	"github.com/sameer/openvg"
 	"github.com/mrmorphic/hwio"
 	"github.com/tarm/serial"
 	"os"
@@ -147,7 +147,7 @@ func drawDesignStudio() {
 		openvg.Img(0, 0, logo)
 	}
 	openvg.FillRGB(BLACK.Red, BLACK.Green, BLACK.Blue, 1)
-	openvg.TextMid(960, 1080 - openvg.TextHeight(defaultFont, 100), "Design Studio", defaultFont, 100)
+	openvg.TextMid(960, 1080 - openvg.TextHeight(defaultFont, 100) - openvg.TextDepth(defaultFont, 100), "Design Studio", defaultFont, 100)
 }
 
 func isOpen() bool {
@@ -193,7 +193,7 @@ func drawOpen(open bool) {
 		text = "Open"
 	}
 	openvg.FillRGB(fill.Red, fill.Green, fill.Blue, 1)
-	openvg.TextMid(960, 500, text, defaultFont, 400)
+	openvg.TextMid(960, openvg.TextDepth(defaultFont, 300) + openvg.TextHeight(defaultFont, 100) + openvg.TextHeight(defaultFont, 100), text, defaultFont, 300)
 }
 
 func drawMentorOnDuty() {
@@ -202,7 +202,7 @@ func drawMentorOnDuty() {
 		dutyStr := "Mentor on Duty: "
 		now := time.Now()
 		dutyStr += names[dow(now.Day(), int(now.Month()), now.Year())][((now.Hour() - 12) / 2)]
-		openvg.TextMid(960, openvg.TextHeight(defaultFont, 100)/2, dutyStr, defaultFont, 100)
+		openvg.TextMid(960, openvg.TextDepth(defaultFont, 100), dutyStr, defaultFont, 100)
 	}
 }
 
