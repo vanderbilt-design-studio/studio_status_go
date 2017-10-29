@@ -62,12 +62,12 @@ func setup() {
 		var err error = nil
 		gpio17, err = hwio.GetPin("gpio17")
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("gpio17 ", err)
 			isGPIOAvailable = false
 		}
 		gpio27, err = hwio.GetPin("gpio27")
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("gpio27 ", err)
 			isGPIOAvailable = false
 		}
 		if isGPIOAvailable {
@@ -86,7 +86,7 @@ func setup() {
 		logo, _, _ = image.Decode(file)
 		file.Close()
 	} else {
-		fmt.Println(err)
+		fmt.Println("logo.png ", err)
 		file.Close()
 	}
 }
@@ -147,7 +147,7 @@ func drawDesignStudio() {
 		openvg.Img(0, 0, logo)
 	}
 	openvg.FillRGB(BLACK.Red, BLACK.Green, BLACK.Blue, 1)
-	openvg.TextMid(960, openvg.TextHeight(defaultFont, 200), "Design Studio", defaultFont, 100)
+	openvg.TextMid(960, 1080 - openvg.TextHeight(defaultFont, 100), "Design Studio", defaultFont, 100)
 }
 
 func isOpen() bool {
@@ -157,7 +157,7 @@ func isOpen() bool {
 	if currentHour >= 12 && dayOfWeek > -1 && dayOfWeek < 7 {
 		endOfDayHour := len(names[dayOfWeek])*2 + 12
 		idx := (currentHour - 12) / 2
-		if currentHour < endOfDayHour && len(names[dayOfWeek]) > idx && idx > -1 && len(names[dayOfWeek][idx]) == 0 {
+		if currentHour < endOfDayHour && len(names[dayOfWeek]) > idx && idx > -1 && len(names[dayOfWeek][idx]) != 0 {
 			isOpen = true
 		}
 	}
@@ -193,7 +193,7 @@ func drawOpen(open bool) {
 		text = "Open"
 	}
 	openvg.FillRGB(fill.Red, fill.Green, fill.Blue, 1)
-	openvg.TextMid(960, 203, text, defaultFont, 300)
+	openvg.TextMid(960, 500, text, defaultFont, 400)
 }
 
 func drawMentorOnDuty() {
@@ -202,7 +202,7 @@ func drawMentorOnDuty() {
 		dutyStr := "Mentor on Duty: "
 		now := time.Now()
 		dutyStr += names[dow(now.Day(), int(now.Month()), now.Year())][((now.Hour() - 12) / 2)]
-		openvg.TextMid(960, 1075, dutyStr, defaultFont, 100)
+		openvg.TextMid(960, openvg.TextHeight(defaultFont, 100)/2, dutyStr, defaultFont, 100)
 	}
 }
 
@@ -216,23 +216,23 @@ const (
 func getSwitchValue() int {
 	if isGPIOAvailable {
 		openOne, err := hwio.DigitalRead(gpio17)
-		if err != nil {
+		if err == nil {
 			if openOne == hwio.HIGH {
 				return openNormal
 			} else {
 				openTwo, err := hwio.DigitalRead(gpio27)
-				if err != nil {
+				if err == nil {
 					if openTwo == hwio.HIGH {
 						return openForced
 					} else {
 						return closedForced
 					}
 				} else {
-					fmt.Println(err)
+					fmt.Println("gpio27 err ", err)
 				}
 			}
 		} else {
-			fmt.Println(err)
+			fmt.Println("gpio17 err ", err)
 		}
 	}
 	return openNormal
