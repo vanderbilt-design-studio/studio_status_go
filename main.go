@@ -14,7 +14,14 @@ import (
 var (
 	width    int
 	height   int
-	exitCode = "dsexit"
+	BLUE = openvg.RGB{0, 67, 123}
+	GREEN  = openvg.RGB{0, 95, 77}
+	PURPLE = openvg.RGB{157, 0, 113}
+	BLACK  = openvg.RGB{0, 0, 0}
+	BROWN  = openvg.RGB{98, 51, 30}
+	RED    = openvg.RGB{199, 0, 43}
+	ORANGE = openvg.RGB{255, 104, 2}
+	YELLOW = openvg.RGB{255, 178, 0}
 )
 
 func main() {
@@ -36,17 +43,6 @@ var names = [][]string{
 	{"", "Jeremy D", "Illiya", "Emily M", "Nicholas B"},
 	{"Liam K", "Josh P"},
 	{}}
-
-var (
-	BLUE = openvg.RGB{0, 67, 123}
-	GREEN  = openvg.RGB{0, 95, 77}
-	PURPLE = openvg.RGB{157, 0, 113}
-	BLACK  = openvg.RGB{0, 0, 0}
-	BROWN  = openvg.RGB{98, 51, 30}
-	RED    = openvg.RGB{199, 0, 43}
-	ORANGE = openvg.RGB{255, 104, 2}
-	YELLOW = openvg.RGB{255, 178, 0}
-)
 
 var (
 	isGPIOAvailable        = true
@@ -82,12 +78,13 @@ func setup() {
 		fmt.Println("Acquired serial port!")
 		doorArduino = serialPort
 	}
-	if file, err := os.Open("./logo.png"); err != nil {
+	if file, err := os.Open("./logo.png"); err == nil {
 		logo, _, _ = image.Decode(file)
 		file.Close()
 	} else {
 		fmt.Println("logo.png ", err)
 		file.Close()
+		logo = nil
 	}
 }
 
