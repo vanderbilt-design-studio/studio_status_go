@@ -14,6 +14,7 @@ import (
 var (
 	width    int
 	height   int
+	bgfill   openvg.RGB
 	exitCode = "dsexit"
 )
 
@@ -46,6 +47,7 @@ var (
 	RED    = openvg.RGB{199, 0, 43}
 	ORANGE = openvg.RGB{255, 104, 2}
 	YELLOW = openvg.RGB{255, 178, 0}
+	WHITE  = openvg.RGB{255, 255, 255}
 )
 
 var (
@@ -58,6 +60,7 @@ var (
 )
 
 func setup() {
+	bgfill = WHITE
 	if isGPIOAvailable {
 		var err error = nil
 		gpio17, err = hwio.GetPin("gpio17")
@@ -92,7 +95,7 @@ func setup() {
 }
 
 func draw() {
-	openvg.BackgroundColor("white") // white background
+	openvg.Background(bgfill.Red, bgfill.Green, bgfill.Blue) // white background
 	drawDesignStudio()
 	drawOpen(isOpen())
 	drawMentorOnDuty()
@@ -146,7 +149,7 @@ func drawDesignStudio() {
 	if logo != nil {
 		openvg.Img(0, 0, logo)
 	}
-	openvg.FillRGB(BLACK.Red, BLACK.Green, BLACK.Blue, 1)
+	openvg.FillRGB(WHITE.Red, WHITE.Green, WHITE.Blue, 1)
 	size := 200
 	openvg.TextMid(960, 1080 - openvg.TextHeight(defaultFont, size), "Design Studio", defaultFont, size)
 }
@@ -187,10 +190,11 @@ func dow(d, m, y int) int {
 }
 
 func drawOpen(open bool) {
-	fill := RED
+	fill := WHITE
+	bgfill = RED
 	text := "Closed"
 	if open {
-		fill = GREEN
+		bgfill = GREEN
 		text = "Open"
 	}
 	openvg.FillRGB(fill.Red, fill.Green, fill.Blue, 1)
@@ -199,7 +203,7 @@ func drawOpen(open bool) {
 
 func drawMentorOnDuty() {
 	if isOpen() && getSwitchValue() == openNormal {
-		openvg.FillRGB(BLACK.Red, BLACK.Green, BLACK.Blue, 1)
+		openvg.FillRGB(WHITE.Red, WHITE.Green, WHITE.Blue, 1)
 		dutyStr := "Mentor on Duty: "
 		now := time.Now()
 		dutyStr += names[dow(now.Day(), int(now.Month()), now.Year())][((now.Hour() - 12) / 2)]
