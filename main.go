@@ -4,26 +4,33 @@ import (
 	"github.com/sameer/openvg"
 	"github.com/mrmorphic/hwio"
 	"github.com/tarm/serial"
+	"github.com/RobinUS2/golang-moving-average"
 	"os"
 	"fmt"
 	"time"
 	"image"
 	_ "image/png"
+	"strconv"
+)
+
+const (
+	ticksPerSecond int = 30
 )
 
 var (
-	width    int
-	height   int
-	tick, _ = time.ParseDuration("32ms")
-	BLUE = openvg.RGB{0, 67, 123}
-	GREEN  = openvg.RGB{0, 95, 77}
-	PURPLE = openvg.RGB{157, 0, 113}
-	BLACK  = openvg.RGB{0, 0, 0}
-	BROWN  = openvg.RGB{98, 51, 30}
-	RED    = openvg.RGB{199, 0, 43}
-	ORANGE = openvg.RGB{255, 104, 2}
-	YELLOW = openvg.RGB{255, 178, 0}
-	bgfill   openvg.RGB
+	width   int
+	height  int
+	tick, _ = time.ParseDuration(strconv.Itoa(1000/ticksPerSecond) + "ms")
+	blue    = openvg.RGB{0, 67, 123}
+	green   = openvg.RGB{0, 95, 77}
+	purple  = openvg.RGB{157, 0, 113}
+	black   = openvg.RGB{0, 0, 0}
+	brown   = openvg.RGB{98, 51, 30}
+	red     = openvg.RGB{199, 0, 43}
+	orange  = openvg.RGB{255, 104, 2}
+	yellow  = openvg.RGB{255, 178, 0}
+	white   = openvg.RGB{255, 255, 255}
+	bgfill  openvg.RGB
 )
 
 func main() {
@@ -61,7 +68,7 @@ var (
 )
 
 func setup() {
-	bgfill = WHITE
+	bgfill = white
 	if isGPIOAvailable {
 		var err error = nil
 		gpio17, err = hwio.GetPin("gpio17")
@@ -133,7 +140,8 @@ func flipOpenStripServo() {
 	}
 }
 
-var buf = make([]byte, 10)
+var buf = make([]byte, 1)
+var doorMovingAverage = movingaverage.New(ticksPerSecond)
 
 func isDoorOpen() bool {
 	if !isDoorArduinoAvailable {
@@ -144,16 +152,17 @@ func isDoorOpen() bool {
 	if bytesRead == 0 || err != nil {
 		return false
 	}
-	return buf[0] == 1
+	doorMovingAverage.Add(float64(buf[0]))
+	return doorMovingAverage.Avg() > 0.7 // The door is open for at least 70% of reads in the last second
 }
 
 func drawDesignStudio() {
 	if logo != nil {
 		openvg.Img(0, 0, logo)
 	}
-	openvg.FillRGB(WHITE.Red, WHITE.Green, WHITE.Blue, 1)
+	openvg.FillRGB(white.Red, white.Green, white.Blue, 1)
 	size := 200
-	openvg.TextMid(960, 1080 - openvg.TextHeight(defaultFont, size), "Design Studio", defaultFont, size)
+	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, size), "Design Studio", defaultFont, size)
 }
 
 func isOpen() bool {
@@ -168,9 +177,9 @@ func isOpen() bool {
 		}
 	}
 	switchValue := getSwitchValue()
-	if switchValue == openNormal {
+	if switchValue == stateOpenNormal {
 		return isOpen && isDoorOpen()
-	} else if switchValue == openForced {
+	} else if switchValue == stateOpenForced {
 		return isDoorOpen()
 	} else {
 		return false
@@ -192,20 +201,20 @@ func dow(d, m, y int) int {
 }
 
 func drawOpen(open bool) {
-	fill := WHITE
-	bgfill = RED
+	fill := white
+	bgfill = red
 	text := "Closed"
 	if open {
-		bgfill = GREEN
+		bgfill = green
 		text = "Open"
 	}
 	openvg.FillRGB(fill.Red, fill.Green, fill.Blue, 1)
-	openvg.TextMid(960, openvg.TextDepth(defaultFont, 400) + openvg.TextHeight(defaultFont, 100) + openvg.TextHeight(defaultFont, 100), text, defaultFont, 400)
+	openvg.TextMid(960, openvg.TextDepth(defaultFont, 400)+openvg.TextHeight(defaultFont, 100)+openvg.TextHeight(defaultFont, 100), text, defaultFont, 400)
 }
 
 func drawMentorOnDuty() {
-	if isOpen() && getSwitchValue() == openNormal {
-		openvg.FillRGB(WHITE.Red, WHITE.Green, WHITE.Blue, 1)
+	if isOpen() && getSwitchValue() == stateOpenNormal {
+		openvg.FillRGB(white.Red, white.Green, white.Blue, 1)
 		dutyStr := "Mentor on Duty: "
 		now := time.Now()
 		dutyStr += names[dow(now.Day(), int(now.Month()), now.Year())][((now.Hour() - 12) / 2)]
@@ -214,10 +223,10 @@ func drawMentorOnDuty() {
 }
 
 const (
-	openNormal   = 1
-	openForced   = 2
-	closedForced = 0
-	defaultFont = "helvetica"
+	stateOpenNormal   = iota
+	stateOpenForced
+	stateClosedForced
+	defaultFont       = "helvetica"
 )
 
 func getSwitchValue() int {
@@ -225,14 +234,14 @@ func getSwitchValue() int {
 		openOne, err := hwio.DigitalRead(gpio17)
 		if err == nil {
 			if openOne == hwio.HIGH {
-				return openNormal
+				return stateOpenNormal
 			} else {
 				openTwo, err := hwio.DigitalRead(gpio27)
 				if err == nil {
 					if openTwo == hwio.HIGH {
-						return openForced
+						return stateOpenForced
 					} else {
-						return closedForced
+						return stateClosedForced
 					}
 				} else {
 					fmt.Println("gpio27 err ", err)
@@ -242,5 +251,5 @@ func getSwitchValue() int {
 			fmt.Println("gpio17 err ", err)
 		}
 	}
-	return openNormal
+	return stateOpenNormal
 }
