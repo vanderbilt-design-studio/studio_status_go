@@ -51,8 +51,8 @@ func main() {
 
 var names = [][]string{
 	{"", "", "Dominic G", "Olivia C", "Foard N"},
-	{"", "Juliana Soltys", "Jonah H.", "", "Jillian B"},
-	{"", "Eric N", "Lin Liu", "Sameer P", "Alex B"},
+	{"", "Juliana S", "Jonah H", "", "Jillian B"},
+	{"", "Eric N", "Lin L", "Sameer P", "Alex B"},
 	{"", "Lauren B", "Christina H", "Sophia Z", "Taylor P"},
 	{"", "Jeremy D", "Illiya", "Emily M", "Nicholas B"},
 	{"Liam K", "Josh P"},
