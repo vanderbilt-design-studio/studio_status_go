@@ -23,6 +23,7 @@ var (
 	RED    = openvg.RGB{199, 0, 43}
 	ORANGE = openvg.RGB{255, 104, 2}
 	YELLOW = openvg.RGB{255, 178, 0}
+	bgfill   openvg.RGB
 )
 
 func main() {
@@ -60,6 +61,7 @@ var (
 )
 
 func setup() {
+	bgfill = WHITE
 	if isGPIOAvailable {
 		var err error = nil
 		gpio17, err = hwio.GetPin("gpio17")
@@ -95,7 +97,7 @@ func setup() {
 }
 
 func draw() {
-	openvg.BackgroundColor("white") // white background
+	openvg.Background(bgfill.Red, bgfill.Green, bgfill.Blue) // white background
 	drawDesignStudio()
 	drawOpen(isOpen())
 	drawMentorOnDuty()
@@ -149,8 +151,9 @@ func drawDesignStudio() {
 	if logo != nil {
 		openvg.Img(0, 0, logo)
 	}
-	openvg.FillRGB(BLACK.Red, BLACK.Green, BLACK.Blue, 1)
-	openvg.TextMid(960, 1080 - openvg.TextHeight(defaultFont, 100) - openvg.TextDepth(defaultFont, 100), "Design Studio", defaultFont, 100)
+	openvg.FillRGB(WHITE.Red, WHITE.Green, WHITE.Blue, 1)
+	size := 200
+	openvg.TextMid(960, 1080 - openvg.TextHeight(defaultFont, size), "Design Studio", defaultFont, size)
 }
 
 func isOpen() bool {
@@ -189,19 +192,20 @@ func dow(d, m, y int) int {
 }
 
 func drawOpen(open bool) {
-	fill := RED
+	fill := WHITE
+	bgfill = RED
 	text := "Closed"
 	if open {
-		fill = GREEN
+		bgfill = GREEN
 		text = "Open"
 	}
 	openvg.FillRGB(fill.Red, fill.Green, fill.Blue, 1)
-	openvg.TextMid(960, openvg.TextDepth(defaultFont, 300) + openvg.TextHeight(defaultFont, 100) + openvg.TextHeight(defaultFont, 100), text, defaultFont, 300)
+	openvg.TextMid(960, openvg.TextDepth(defaultFont, 400) + openvg.TextHeight(defaultFont, 100) + openvg.TextHeight(defaultFont, 100), text, defaultFont, 400)
 }
 
 func drawMentorOnDuty() {
 	if isOpen() && getSwitchValue() == openNormal {
-		openvg.FillRGB(BLACK.Red, BLACK.Green, BLACK.Blue, 1)
+		openvg.FillRGB(WHITE.Red, WHITE.Green, WHITE.Blue, 1)
 		dutyStr := "Mentor on Duty: "
 		now := time.Now()
 		dutyStr += names[dow(now.Day(), int(now.Month()), now.Year())][((now.Hour() - 12) / 2)]
@@ -213,7 +217,7 @@ const (
 	openNormal   = 1
 	openForced   = 2
 	closedForced = 0
-	defaultFont = "mono"
+	defaultFont = "helvetica"
 )
 
 func getSwitchValue() int {
