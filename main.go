@@ -14,6 +14,7 @@ import (
 var (
 	width    int
 	height   int
+	tick, _ = time.ParseDuration("32ms")
 	BLUE = openvg.RGB{0, 67, 123}
 	GREEN  = openvg.RGB{0, 95, 77}
 	PURPLE = openvg.RGB{157, 0, 113}
@@ -29,9 +30,14 @@ func main() {
 	defer openvg.Finish()
 	setup()
 	for {
+		start := time.Now()
 		openvg.Start(width, height)
 		draw()
 		openvg.End()
+		duration := time.Now().Sub(start)
+		if duration < tick {
+			time.Sleep(tick - duration)
+		}
 	}
 }
 
@@ -82,7 +88,7 @@ func setup() {
 		logo, _, _ = image.Decode(file)
 		file.Close()
 	} else {
-		fmt.Println("logo.png ", err)
+		fmt.Println("Error while loading logo.png ", err)
 		file.Close()
 		logo = nil
 	}
