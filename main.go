@@ -204,7 +204,7 @@ func drawMentorOnDuty() {
 		openvg.FillRGB(white.Red, white.Green, white.Blue, 1)
 		dutyStr := "Mentor on Duty: "
 		now := time.Now()
-		dutyStr += names[dow(now.Day(), int(now.Month()), now.Year())][((now.Hour() - 12) / 2)]
+		dutyStr += names[int(now.Weekday())][((now.Hour() - 12) / 2)]
 		openvg.TextMid(960, openvg.TextDepth(defaultFont, 100), dutyStr, defaultFont, 100)
 	}
 }
