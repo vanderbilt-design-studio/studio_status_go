@@ -166,13 +166,14 @@ func drawDesignStudio() {
 }
 
 func isOpen() bool {
-	dayOfWeek := dow(time.Now().Day(), int(time.Now().Month()), time.Now().Year())
-	currentHour := time.Now().Hour()
+	t := time.Now()
+	dayOfWeek := int(t.Weekday())
+	currentHour := t.Hour()
 	isOpen := false
 	if currentHour >= 12 && dayOfWeek > -1 && dayOfWeek < 7 {
 		endOfDayHour := len(names[dayOfWeek])*2 + 12
 		idx := (currentHour - 12) / 2
-		if currentHour < endOfDayHour && len(names[dayOfWeek]) > idx && idx > -1 && len(names[dayOfWeek][idx]) != 0 {
+		if currentHour < endOfDayHour && idx < len(names[dayOfWeek]) && idx > -1 && len(names[dayOfWeek][idx]) != 0 {
 			isOpen = true
 		}
 	}
@@ -184,20 +185,6 @@ func isOpen() bool {
 	} else {
 		return false
 	}
-}
-
-// d = day in month
-// m = month (January = 1 : December = 12)
-// y = 4 digit year
-// Returns 0 = Sunday .. 6 = Saturday
-func dow(d, m, y int) int {
-	if m < 3 {
-		m += 12
-		y--
-	}
-	return (d + int((float32(m)+1.0)*float32(2.6)) + y + int(y/4) + 6*int(y/100) +
-		int(y/400) + 6) %
-		7
 }
 
 func drawOpen(open bool) {
