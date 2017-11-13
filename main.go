@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/sameer/openvg"
 	"github.com/mrmorphic/hwio"
-	"github.com/mrmorphic/hwio/servo"
 	"github.com/tarm/serial"
 	"github.com/RobinUS2/golang-moving-average"
 	"os"
@@ -87,7 +86,7 @@ func setup() {
 			hwio.PinMode(gpio27, hwio.INPUT)
 		}
 	}
-	serialConf := &serial.Config{Name: "/dev/ttyACM0", Baud: 600, ReadTimeout: time.Millisecond * 700}
+	serialConf := &serial.Config{Name: "/dev/ttyACM0", Baud: 9600, ReadTimeout: time.Millisecond * 700}
 	serialPort, err := serial.OpenPort(serialConf)
 	if err == nil {
 		isDoorArduinoAvailable = true
@@ -153,7 +152,9 @@ func isDoorOpen() bool {
 	if bytesRead == 0 || err != nil {
 		return false
 	}
-	val, _ := strconv.ParseInt(string(buf[:bytesRead]), 10, 16)
+	readStr := string(buf[:bytesRead])
+	fmt.Println(readStr)
+	val, _ := strconv.ParseInt(readStr, 10, 16)
 	doorMovingAverage.Add(float64(val))
 	return doorMovingAverage.Avg() > 200 // The door sees light on average
 }
