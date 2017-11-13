@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/sameer/openvg"
 	"github.com/mrmorphic/hwio"
+	"github.com/mrmorphic/hwio/servo"
 	"github.com/tarm/serial"
 	"github.com/RobinUS2/golang-moving-average"
 	"os"
@@ -104,7 +105,7 @@ func setup() {
 }
 
 func draw() {
-	openvg.Background(bgfill.Red, bgfill.Green, bgfill.Blue) // white background
+	openvg.Background(bgfill.Red, bgfill.Green, bgfill.Blue) // background
 	drawDesignStudio()
 	drawOpen(isOpen())
 	drawMentorOnDuty()
@@ -140,8 +141,8 @@ func flipOpenStripServo() {
 	}
 }
 
-var buf = make([]byte, 1)
-var doorMovingAverage = movingaverage.New(ticksPerSecond)
+var buf = make([]byte, 128)
+var doorMovingAverage = movingaverage.New(ticksPerSecond*2)
 
 func isDoorOpen() bool {
 	if !isDoorArduinoAvailable {
@@ -152,8 +153,9 @@ func isDoorOpen() bool {
 	if bytesRead == 0 || err != nil {
 		return false
 	}
-	doorMovingAverage.Add(float64(buf[0]))
-	return doorMovingAverage.Avg() > 0.7 // The door is open for at least 70% of reads in the last second
+	val, _ := strconv.ParseInt(string(buf[:bytesRead]), 10, 16)
+	doorMovingAverage.Add(float64(val))
+	return doorMovingAverage.Avg() > 200 // The door sees light on average
 }
 
 func drawDesignStudio() {
