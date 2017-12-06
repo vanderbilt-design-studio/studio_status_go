@@ -86,7 +86,7 @@ func setup() {
 			hwio.PinMode(gpio27, hwio.INPUT)
 		}
 	}
-	serialConf := &serial.Config{Name: "/dev/ttyACM0", Baud: 9600, ReadTimeout: time.Millisecond * 700}
+	serialConf := &serial.Config{Name: "/dev/ttyACM0", Baud: 9600}
 	serialPort, err := serial.OpenPort(serialConf)
 	if err == nil {
 		isDoorArduinoAvailable = true
@@ -140,21 +140,21 @@ func flipOpenStripServo() {
 	}
 }
 
-var buf = make([]byte, 128)
+var buf = make([]byte, 1)
 var doorMovingAverage = movingaverage.New(ticksPerSecond*2)
 
 func isDoorOpen() bool {
 	if !isDoorArduinoAvailable {
 		return true
 	}
-	doorArduino.Write([]byte{0})
+	doorArduino.Write([]byte{1})
 	bytesRead, err := doorArduino.Read(buf)
 	if bytesRead == 0 || err != nil {
 		return false
 	}
-	readStr := string(buf[:bytesRead])
-	fmt.Println(readStr)
-	val, _ := strconv.ParseInt(readStr, 10, 16)
+	val := int(buf[0])*256
+	bytesRead, err = doorArduino.Read(buf)
+	val += int(buf[0])
 	doorMovingAverage.Add(float64(val))
 	return doorMovingAverage.Avg() > 200 // The door sees light on average
 }
