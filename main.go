@@ -165,7 +165,7 @@ func isDoorOpen() bool {
 	if bytesRead == 0 || err != nil {
 		return true
 	}
-	return buf[0] == 0; // 0 == false aka door closed
+	return buf[0] != 0; // 0 == false aka door closed
 	// Add onto the average
 	//doorMovingAverage.Add(float64(val))
 	//return doorMovingAverage.Avg() > 200 // The door sees light on average
@@ -184,7 +184,7 @@ func isThereMotion() bool {
 	if bytesRead == 0 || err != nil {
 		return false
 	}
-	return buf[0] == 0;
+	return buf[0] != 0;
 }
 
 func drawDesignStudio() {
