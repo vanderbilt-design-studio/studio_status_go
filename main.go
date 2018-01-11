@@ -4,7 +4,6 @@ import (
 	"github.com/sameer/openvg"
 	"github.com/mrmorphic/hwio"
 	"github.com/tarm/serial"
-	"github.com/RobinUS2/golang-moving-average"
 	"os"
 	"fmt"
 	"time"
@@ -23,30 +22,30 @@ var (
 	tick, _ = time.ParseDuration(strconv.Itoa(1000/ticksPerSecond) + "ms") // convert TPS to useful number
 	// A bunch of standard colors from the official guidelines (somewhere) for road signs
 	// to ensure AAA accessiblity. (i.e. red is not pure red so protanomaly colorblind see it)
-	blue    = openvg.RGB{0, 67, 123}
-	green   = openvg.RGB{0, 95, 77}
-	purple  = openvg.RGB{157, 0, 113}
-	black   = openvg.RGB{0, 0, 0}
-	brown   = openvg.RGB{98, 51, 30}
-	red     = openvg.RGB{199, 0, 43}
-	orange  = openvg.RGB{255, 104, 2}
-	yellow  = openvg.RGB{255, 178, 0}
-	white   = openvg.RGB{255, 255, 255}
-	bgfill  openvg.RGB // Background fill
+	blue   = openvg.RGB{0, 67, 123}
+	green  = openvg.RGB{0, 95, 77}
+	purple = openvg.RGB{157, 0, 113}
+	black  = openvg.RGB{0, 0, 0}
+	brown  = openvg.RGB{98, 51, 30}
+	red    = openvg.RGB{199, 0, 43}
+	orange = openvg.RGB{255, 104, 2}
+	yellow = openvg.RGB{255, 178, 0}
+	white  = openvg.RGB{255, 255, 255}
+	bgfill openvg.RGB // Background fill
 )
 
 func main() {
 	width, height = openvg.Init() // Start openvg
-	defer openvg.Finish() // will be run at the very end of main()
+	defer openvg.Finish()         // will be run at the very end of main()
 	setup()
-	for {   // Loop keeps the TPS at a certain rate.
+	for { // Loop keeps the TPS at a certain rate.
 		start := time.Now()
-		openvg.Start(width, height) 		// Allow draw commands
-		draw()                      		// Do draw commands
-		openvg.End()                		// Disallow them
-		duration := time.Now().Sub(start)	// Check how long it took
+		openvg.Start(width, height)       // Allow draw commands
+		draw()                            // Do draw commands
+		openvg.End()                      // Disallow them
+		duration := time.Now().Sub(start) // Check how long it took
 		if duration < tick {
-			time.Sleep(tick - duration)	// Wait a bit if it was faster than the target TPS
+			time.Sleep(tick - duration) // Wait a bit if it was faster than the target TPS
 		}
 	}
 }
@@ -54,26 +53,26 @@ func main() {
 // Mentor names array. Each row is a day of the week (sun, mon, ..., sat). Each element in a
 // row is a mentor timeslot starting at 12PM, where each slot is 2 hours long.
 var names = [][]string{
-	{"", "", "Dominic G", "Olivia C", "Foard N"},
-	{"", "Juliana S", "Jonah H", "", "Jillian B"},
-	{"", "Eric N", "Lin L", "Sameer P", "Alex B"},
-	{"", "Lauren B", "Christina H", "Sophia Z", "Taylor P"},
-	{"", "Jeremy D", "Illiya", "Emily M", "Nicholas B"},
-	{"Liam K", "Josh P"},
+	{"", "", "Nick B", "", ""},
+	{"", "Lin L", "Amaury P", "Jeremy D", "Kurt L"},
+	{"", "Sophia Z", "Emily Mk", "Jonah H", ""},
+	{"", "Eric N", "Lauren B", "Sameer P", "Christina H"},
+	{"", "Alex B", "Emily Mc", "Braden B", "Jill B"},
+	{"", "Dominic G"},
 	{}} // No Saturday shifts
 
 var (
-	isGPIOAvailable        = true	// Is the device the sign being run on GPIO-enabled? Yes if raspberry pi
-	isDoorArduinoAvailable = false  // Determined during setup()
-	gpio17                 hwio.Pin // BCM Pin 17 (https://pinout.xyz/)
-	gpio27                 hwio.Pin // BCM Pin 27
+	isGPIOAvailable        = true             // Is the device the sign being run on GPIO-enabled? Yes if raspberry pi
+	isDoorArduinoAvailable = false            // Determined during setup()
+	gpio17                 hwio.Pin           // BCM Pin 17 (https://pinout.xyz/)
+	gpio27                 hwio.Pin           // BCM Pin 27
 	doorArduino            *serial.Port = nil // A port for transferring data with the photoresistor sketch
-	logo                   image.Image // Dead code ignore this
+	logo                   image.Image        // Dead code ignore this
 )
 
 func setup() {
-	bgfill = white					// BG white by default
-	if isGPIOAvailable {				// Grab the pins if available
+	bgfill = white // BG white by default
+	if isGPIOAvailable { // Grab the pins if available
 		var err error = nil
 		gpio17, err = hwio.GetPin("gpio17")
 		if err != nil {
@@ -91,16 +90,16 @@ func setup() {
 		}
 	}
 	serialConf := &serial.Config{Name: "/dev/ttyACM0", Baud: 9600}
-	serialPort, err := serial.OpenPort(serialConf)	// Try to open a serial port.
-	if err == nil {					// Success
+	serialPort, err := serial.OpenPort(serialConf) // Try to open a serial port.
+	if err == nil { // Success
 		isDoorArduinoAvailable = true
 		fmt.Println("Acquired serial port!")
 		doorArduino = serialPort
 	}
-	if file, err := os.Open("./logo.png"); err == nil {	// Ignore this
+	if file, err := os.Open("./logo.png"); err == nil { // Ignore this
 		logo, _, _ = image.Decode(file)
 		file.Close()
-	} else {					   	// This too
+	} else { // This too
 		fmt.Println("Error while loading logo.png ", err)
 		file.Close()
 		logo = nil
@@ -108,16 +107,16 @@ func setup() {
 }
 
 func draw() {
-	openvg.Background(bgfill.Red, bgfill.Green, bgfill.Blue)	// Fill BG vals
-	drawDesignStudio()					 	// Draw the words "Design Studio"
-	drawOpen(isOpen())						// Handles whether the studio is open
-	drawMentorOnDuty()						// Mentor name if there is one on duty
-	flipOpenStripServo()						// WIP the servo broke last time I tried this
-									// TODO: use an NPN transistor instead of servo
+	openvg.Background(bgfill.Red, bgfill.Green, bgfill.Blue) // Fill BG vals
+	drawDesignStudio()                                       // Draw the words "Design Studio"
+	drawOpen(isOpen())                                       // Handles whether the studio is open
+	drawMentorOnDuty()                                       // Mentor name if there is one on duty
+	flipOpenStripServo()                                     // WIP the servo broke last time I tried this
+	// TODO: use an NPN transistor instead of servo
 }
 
 var (
-	servoOpen   = false	// Servo states
+	servoOpen   = false // Servo states
 	firstSwitch = true
 )
 
@@ -148,33 +147,44 @@ func flipOpenStripServo() {
 
 // Vars for tracking photoresistor vals.
 var buf = make([]byte, 1)
-// Keeps a moving average of the photoresistor value for the last 2 seconds.
-// This prevents bad sensor values from affecting the state of the sign.
-// (i.e. tall people walking through the door or a lose photoresistor)
-var doorMovingAverage = movingaverage.New(ticksPerSecond*2)
+
+const (
+	doorSensorReq   = 2
+	motionSensorReq = 4
+)
 
 func isDoorOpen() bool {
 	if !isDoorArduinoAvailable {
 		return true
 	}
-	doorArduino.Write([]byte{1}) // Send a request for photoresistor value
+	doorArduino.Write([]byte{doorSensorReq}) // Send a request for photoresistor value
 	bytesRead, err := doorArduino.Read(buf)
 	// If we failed to read a value, assume either something is wrong with the hardware
 	// i.e. the Arduino was unplugged. The mentor on duty can override the current value
 	// by switching it to open override.
 	if bytesRead == 0 || err != nil {
-		return false
+		return true
 	}
-	val := int(buf[0])*256
-	bytesRead, err = doorArduino.Read(buf)
-	val += int(buf[0])
+	return buf[0] == 0; // 0 == false aka door closed
 	// Add onto the average
-	doorMovingAverage.Add(float64(val))
-	return doorMovingAverage.Avg() > 200 // The door sees light on average
+	//doorMovingAverage.Add(float64(val))
+	//return doorMovingAverage.Avg() > 200 // The door sees light on average
 	// TODO: change this so a sudden 30% difference in the moving average will cause a state transition
 	// TODO: remove the magic value of 200 because sometimes the sensor changes irreversably because people
 	// mess with the arduino. Instead, we can make an assumption that no one will be in the room at 5/6AM and
 	// use the sensor values at those times as "darkness".
+}
+
+func isThereMotion() bool {
+	if !isDoorArduinoAvailable {
+		return false
+	}
+	doorArduino.Write([]byte{motionSensorReq})
+	bytesRead, err := doorArduino.Read(buf)
+	if bytesRead == 0 || err != nil {
+		return false
+	}
+	return buf[0] == 0;
 }
 
 func drawDesignStudio() {
@@ -252,9 +262,9 @@ func drawMentorOnDuty() {
 }
 
 const (
-	stateOpenNormal   = iota	// 0
-	stateOpenForced			// 1
-	stateClosedForced		// 2
+	stateOpenNormal   = iota        // 0
+	stateOpenForced                 // 1
+	stateClosedForced               // 2
 	defaultFont       = "helvetica" // Helvetica font is beautiful for long distance reading.
 )
 
