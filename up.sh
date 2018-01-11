@@ -2,6 +2,7 @@
 # Bash script to keep the studio status program running, even in the event of crashes.
 
 cd /home/pi/go/src/github.com/vanderbilt-design-studio/studio_status_go
+git pull
 go build
 while :
 do 
