@@ -53,7 +53,7 @@ func main() {
 // Mentor names array. Each row is a day of the week (sun, mon, ..., sat). Each element in a
 // row is a mentor timeslot starting at 12PM, where each slot is 2 hours long.
 var names = [][]string{
-	{"", "", "Nick B", "", ""},
+	{"", "", "Nick B", "Foard N", ""},
 	{"", "Lin L", "Amaury P", "Jeremy D", "Kurt L"},
 	{"", "Sophia Z", "Emily Mk", "Jonah H", ""},
 	{"", "Eric N", "Lauren B", "Sameer P", "Christina H"},
