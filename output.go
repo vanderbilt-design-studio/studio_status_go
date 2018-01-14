@@ -124,7 +124,7 @@ func (s *SignState) Log() {
 			panic(err)
 		}
 		defer logFile.Close()
-		csvLine := fmt.Sprintf("%v,%v,%v,%v\n", time.Now().Format(time.RFC1123), stateCopy.Open, stateCopy.SwitchValue, stateCopy.Motion)
+		csvLine := fmt.Sprintf("%v,%v,%v,%v\n", time.Now().Format(time.RFC822), stateCopy.Open, stateCopy.SwitchValue, stateCopy.Motion)
 		if _, err = logFile.WriteString(csvLine); err != nil {
 			panic(err)
 		}
