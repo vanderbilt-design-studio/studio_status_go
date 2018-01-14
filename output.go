@@ -82,7 +82,7 @@ func (s *SignState) Notify() {
 }
 
 func (s *SignState) Post() {
-	x_api_key := os.Getenv("x-api-key")
+	x_api_key := os.Getenv("x_api_key")
 	if x_api_key == "" {
 		return
 	}
