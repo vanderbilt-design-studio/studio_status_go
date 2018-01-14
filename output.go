@@ -11,6 +11,8 @@ import (
 	"github.com/sameer/fsm/moore"
 )
 
+const defaultFont = "helvetica" // Helvetica font is beautiful for long distance reading.
+
 var (
 	// A bunch of standard colors from the official guidelines (somewhere) for road signs
 	// to ensure AAA accessiblity. (i.e. red is not pure red so protanomaly colorblind see it)
