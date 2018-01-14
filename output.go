@@ -27,8 +27,16 @@ var (
 	white  = color.RGBA{255, 255, 255, 255}
 )
 
+func UnwrapRGB(c color.RGBA) (r,g,b uint8) {
+	return c.R, c.G, c.B
+}
+
+func UnwrapRGBA(c color.RGBA) (r,g,b uint8, a openvg.VGfloat) {
+	return c.R, c.G, c.B, openvg.VGfloat(c.A)/255.0
+}
+
 func (s *SignState) draw() {
-	openvg.Background(openvg.UnwrapRGB(s.BackgroundFill)) // Fill BG vals
+	openvg.Background(UnwrapRGB(s.BackgroundFill)) // Fill BG vals
 	s.drawDesignStudio()                                  // Draw the words "Design Studio"
 	s.drawOpen(s.Open)                                    // Handles whether the studio is open
 	s.drawMentorOnDuty()                                  // Mentor name if there is one on duty
@@ -37,7 +45,7 @@ func (s *SignState) draw() {
 
 func (s *SignState) drawDesignStudio() {
 	// Set the drawing color to be white
-	openvg.FillRGB(openvg.UnwrapRGBA(white))
+	openvg.FillRGB(UnwrapRGBA(white))
 	// Draw text at a size of 200 in Helvetica Bold
 	size := 200
 	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, size), "Design Studio", defaultFont, size)
@@ -54,7 +62,7 @@ func (s *SignState) drawOpen(open bool) {
 		text = "Open"
 	}
 	// Draw that, centered and big.
-	openvg.FillRGB(openvg.UnwrapRGBA(fill))
+	openvg.FillRGB(UnwrapRGBA(fill))
 	openvg.TextMid(960, openvg.TextDepth(defaultFont, 400)+openvg.TextHeight(defaultFont, 100)+openvg.TextHeight(defaultFont, 100), text, defaultFont, 400)
 }
 
@@ -62,7 +70,7 @@ func (s *SignState) drawMentorOnDuty() {
 	// Open + normal operation.
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		// White text
-		openvg.FillRGB(openvg.UnwrapRGBA(white))
+		openvg.FillRGB(UnwrapRGBA(white))
 		dutyStr := "Mentor on Duty: "
 		now := time.Now()
 		// This should never ever fail, because it should've already been checked in isOpen().
