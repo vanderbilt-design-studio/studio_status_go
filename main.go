@@ -9,17 +9,12 @@ import (
 	"time"
 	"image"
 	_ "image/png"
-	"strconv"
-)
-
-const (
-	ticksPerSecond int = 30 // Framerate of 30FPS (TPS)
 )
 
 var (
 	width   int // Display size
 	height  int
-	tick, _ = time.ParseDuration(strconv.Itoa(1000/ticksPerSecond) + "ms") // convert TPS to useful number
+	tick = time.Duration(1000/30 * time.Millisecond)// convert TPS to useful number
 	// A bunch of standard colors from the official guidelines (somewhere) for road signs
 	// to ensure AAA accessiblity. (i.e. red is not pure red so protanomaly colorblind see it)
 	blue   = openvg.RGB{0, 67, 123}
@@ -38,15 +33,10 @@ func main() {
 	width, height = openvg.Init() // Start openvg
 	defer openvg.Finish()         // will be run at the very end of main()
 	setup()
-	for { // Loop keeps the TPS at a certain rate.
-		start := time.Now()
+	for range time.Tick(tick){ // Loop keeps the TPS at a certain rate.
 		openvg.Start(width, height)       // Allow draw commands
 		draw()                            // Do draw commands
 		openvg.End()                      // Disallow them
-		duration := time.Now().Sub(start) // Check how long it took
-		if duration < tick {
-			time.Sleep(tick - duration) // Wait a bit if it was faster than the target TPS
-		}
 	}
 }
 
