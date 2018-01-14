@@ -62,5 +62,5 @@ func main() {
 		inputFunction,
 		outputFunction,
 	)
-	<-mm.Fork(time.NewTicker(tick))
+	mm.Run(time.NewTicker(tick))
 }
