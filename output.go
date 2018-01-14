@@ -4,8 +4,11 @@ import (
 	"github.com/sameer/openvg"
 	"time"
 	"image/color"
+	"net/http"
+	"fmt"
+	"strings"
+	"os"
 )
-
 
 var (
 	// A bunch of standard colors from the official guidelines (somewhere) for road signs
@@ -23,9 +26,9 @@ var (
 
 func (s *SignState) draw() {
 	openvg.Background(openvg.UnwrapRGB(s.BackgroundFill)) // Fill BG vals
-	s.drawDesignStudio()                         // Draw the words "Design Studio"
-	s.drawOpen(s.Open)                           // Handles whether the studio is open
-	s.drawMentorOnDuty()                         // Mentor name if there is one on duty
+	s.drawDesignStudio()                                  // Draw the words "Design Studio"
+	s.drawOpen(s.Open)                                    // Handles whether the studio is open
+	s.drawMentorOnDuty()                                  // Mentor name if there is one on duty
 	// TODO: use an NPN transistor instead of servo
 }
 
@@ -63,4 +66,40 @@ func (s *SignState) drawMentorOnDuty() {
 		dutyStr += names[int(now.Weekday())][((now.Hour() - 12) / 2)]
 		openvg.TextMid(960, openvg.TextDepth(defaultFont, 100), dutyStr, defaultFont, 100)
 	}
+}
+
+const postUrl = "https://ds-sign.yunyul.in"
+
+func (s *SignState) postState() {
+	select {
+	case <-s.PostTicker.C: // If it is time to do a post!
+		x_api_key := os.Getenv("x-api-key")
+		if x_api_key == "" {
+			return
+		}
+		title := "Closed"
+		if s.Open {
+			title = "Open"
+		}
+		subtitle := ""
+		payload := strings.NewReader(fmt.Sprintf(`{"bgcolor": "rgb(%v,%v,%v)", "title": "%v", "subtitle": "%v"}`,
+			s.BackgroundFill.R, s.BackgroundFill.G, s.BackgroundFill.B,
+			title,
+			subtitle,
+		))
+
+		req, err := http.NewRequest("POST", postUrl, payload)
+		if err != nil {
+			fmt.Printf("Failed to prepare post request: %v\n", err)
+		}
+
+		req.Header.Add("content-type", "application/json")
+		req.Header.Add("x-api-key", x_api_key)
+
+		_, err = http.DefaultClient.Do(req)
+		if err != nil {
+			fmt.Printf("Failed to post data: %v\n", err)
+		}
+	}
+
 }

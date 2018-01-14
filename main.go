@@ -28,6 +28,7 @@ type SignState struct {
 	BackgroundFill color.RGBA // Background fill
 	Open           bool
 	SwitchValue    SwitchState
+	PostTicker     *time.Ticker
 }
 
 var transitionFunction moore.TransitionFunction = func(state moore.State, input moore.Input) (moore.State, error) {
@@ -40,6 +41,9 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 	if !s.Init {
 		s.Width, s.Height = openvg.Init() // Start openvg
 		s.BackgroundFill = white
+		s.Open = false
+		s.SwitchValue = stateClosedForced
+		s.PostTicker = time.NewTicker(time.Duration(time.Minute))
 		s.Init = true
 	}
 
