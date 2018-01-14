@@ -79,6 +79,8 @@ func (s *SignState) Notify() {
 	case <-s.NotifyTicker.C: // If it is time to do a post!
 		s.Post()
 		s.Log()
+	default:
+		return
 	}
 
 }

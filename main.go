@@ -8,7 +8,7 @@ import (
 )
 
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert TPS to useful number
-const notifyPeriod = time.Duration(time.Minute)
+const notifyPeriod = time.Duration(5 * time.Second)
 
 // Mentor names array. Each row is a day of the week (sun, mon, ..., sat). Each element in a
 // row is a mentor timeslot starting at 12PM, where each slot is 2 hours long.
