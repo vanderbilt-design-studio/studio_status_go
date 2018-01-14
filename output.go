@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 	"os"
+	"github.com/sameer/fsm/moore"
 )
 
 var (
@@ -69,37 +70,67 @@ func (s *SignState) drawMentorOnDuty() {
 }
 
 const postUrl = "https://ds-sign.yunyul.in"
+const logFilename = "activity.log"
 
-func (s *SignState) postState() {
+func (s *SignState) Notify() {
 	select {
-	case <-s.PostTicker.C: // If it is time to do a post!
-		x_api_key := os.Getenv("x-api-key")
-		if x_api_key == "" {
-			return
-		}
-		title := "Closed"
-		if s.Open {
-			title = "Open"
-		}
-		subtitle := ""
-		payload := strings.NewReader(fmt.Sprintf(`{"bgcolor": "rgb(%v,%v,%v)", "title": "%v", "subtitle": "%v"}`,
-			s.BackgroundFill.R, s.BackgroundFill.G, s.BackgroundFill.B,
-			title,
-			subtitle,
-		))
-
-		req, err := http.NewRequest("POST", postUrl, payload)
-		if err != nil {
-			fmt.Printf("Failed to prepare post request: %v\n", err)
-		}
-
-		req.Header.Add("content-type", "application/json")
-		req.Header.Add("x-api-key", x_api_key)
-
-		_, err = http.DefaultClient.Do(req)
-		if err != nil {
-			fmt.Printf("Failed to post data: %v\n", err)
-		}
+	case <-s.NotifyTicker.C: // If it is time to do a post!
+		s.Post()
+		s.Log()
 	}
 
+}
+
+func (s *SignState) Post() {
+	x_api_key := os.Getenv("x-api-key")
+	if x_api_key == "" {
+		return
+	}
+	title := "Closed"
+	if s.Open {
+		title = "Open"
+	}
+	// TODO: grab mentor on duty
+	subtitle := ""
+	payload := strings.NewReader(fmt.Sprintf(`{"bgcolor": "rgb(%v,%v,%v)", "title": "%v", "subtitle": "%v"}`,
+		s.BackgroundFill.R, s.BackgroundFill.G, s.BackgroundFill.B,
+		title,
+		subtitle,
+	))
+
+	req, err := http.NewRequest("POST", postUrl, payload)
+	if err != nil {
+		fmt.Printf("Failed to prepare post request: %v\n", err)
+	}
+
+	req.Header.Add("content-type", "application/json")
+	req.Header.Add("x-api-key", x_api_key)
+
+	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Printf("Failed to post data: %v\n", err)
+	}
+}
+
+func (s *SignState) Log() {
+	stateCopy := *s
+	go func() {
+		logFile, err := os.OpenFile(logFilename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+		if err != nil {
+			panic(err)
+		}
+		defer logFile.Close()
+		csvLine := fmt.Sprintf("%v,%v,%v,%v\n", time.Now().Format(time.RFC1123), stateCopy.Open, stateCopy.SwitchValue, stateCopy.Motion)
+		if _, err = logFile.WriteString(csvLine); err != nil {
+			panic(err)
+		}
+	}()
+}
+
+var outputFunction moore.OutputFunction = func(state moore.State) {
+	s := state.(*SignState)
+	openvg.Start(s.Width, s.Height) // Allow draw commands
+	s.draw()                        // Do draw commands
+	openvg.End()                    // Disallow them
+	s.Notify()
 }

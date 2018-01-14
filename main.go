@@ -9,7 +9,8 @@ import (
 )
 
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert TPS to useful number
-const defaultFont = "helvetica"                          // Helvetica font is beautiful for long distance reading.
+const notifyPeriod = time.Duration(time.Minute)
+const defaultFont = "helvetica" // Helvetica font is beautiful for long distance reading.
 
 // Mentor names array. Each row is a day of the week (sun, mon, ..., sat). Each element in a
 // row is a mentor timeslot starting at 12PM, where each slot is 2 hours long.
@@ -28,7 +29,8 @@ type SignState struct {
 	BackgroundFill color.RGBA // Background fill
 	Open           bool
 	SwitchValue    SwitchState
-	PostTicker     *time.Ticker
+	Motion         bool
+	NotifyTicker   *time.Ticker
 }
 
 var transitionFunction moore.TransitionFunction = func(state moore.State, input moore.Input) (moore.State, error) {
@@ -43,21 +45,15 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		s.BackgroundFill = white
 		s.Open = false
 		s.SwitchValue = stateClosedForced
-		s.PostTicker = time.NewTicker(time.Duration(time.Minute))
+		s.NotifyTicker = time.NewTicker(notifyPeriod)
 		s.Init = true
 	}
 
 	s.Open = i.IsOpen()
 	s.SwitchValue = i.GetSwitchValue()
+	s.Motion = i.IsThereMotion()
 
 	return s, err
-}
-
-var outputFunction moore.OutputFunction = func(state moore.State) {
-	s := state.(*SignState)
-	openvg.Start(s.Width, s.Height) // Allow draw commands
-	s.draw()                        // Do draw commands
-	openvg.End()                    // Disallow them
 }
 
 func main() {

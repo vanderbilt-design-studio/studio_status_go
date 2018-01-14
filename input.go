@@ -140,7 +140,7 @@ func (si *SignInput) IsDoorOpen() bool {
 	// use the sensor values at those times as "darkness".
 }
 
-func (si *SignInput) isThereMotion() bool {
+func (si *SignInput) IsThereMotion() bool {
 	var buf = make([]byte, 1)
 	if si.doorArduino == nil {
 		return false
