@@ -155,6 +155,7 @@ func (si *SignInput) IsThereMotion() bool {
 
 var inputFunction moore.InputFunction = func() moore.InputFunction {
 	input := &SignInput{}
+	input.isGPIOAvailable = true
 	input.init()
 	return func() moore.Input {
 		return input
