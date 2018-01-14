@@ -96,7 +96,7 @@ func (s *SignState) Post() {
 	}
 	// TODO: grab mentor on duty
 	subtitle := ""
-	payload := strings.NewReader(fmt.Sprintf(`{"bgcolor": "rgb(%v,%v,%v)", "title": "%v", "subtitle": "%v"}`,
+	payload := strings.NewReader(fmt.Sprintf(`{"bgColor": "rgb(%v,%v,%v)", "title": "%v", "subtitle": "%v"}`,
 		s.BackgroundFill.R, s.BackgroundFill.G, s.BackgroundFill.B,
 		title,
 		subtitle,
