@@ -4,7 +4,6 @@ import (
 	"github.com/sameer/openvg"
 	"github.com/sameer/fsm/moore"
 	"time"
-	_ "image/png"
 	"image/color"
 )
 
