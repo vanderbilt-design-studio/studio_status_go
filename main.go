@@ -53,6 +53,7 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 			fmt.Println("gpio22 ", err)
 			s.isRelayAvailable = false
 		} else {
+			s.isRelayAvailable = true
 			hwio.PinMode(s.gpio22, hwio.OUTPUT)
 		}
 		s.Init = true
