@@ -5,6 +5,8 @@ import (
 	"github.com/sameer/fsm/moore"
 	"time"
 	"image/color"
+	"github.com/mrmorphic/hwio"
+	"fmt"
 )
 
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert TPS to useful number
@@ -22,13 +24,15 @@ var names = [][]string{
 	{}} // No Saturday shifts
 
 type SignState struct {
-	Init           bool
-	Width, Height  int        // Display size
-	BackgroundFill color.RGBA // Background fill
-	Open           bool
-	SwitchValue    SwitchState
-	Motion         bool
-	NotifyTicker   *time.Ticker
+	Init             bool
+	Width, Height    int        // Display size
+	BackgroundFill   color.RGBA // Background fill
+	Open             bool
+	SwitchValue      SwitchState
+	Motion           bool
+	NotifyTicker     *time.Ticker
+	gpio22           hwio.Pin
+	isRelayAvailable bool
 }
 
 var transitionFunction moore.TransitionFunction = func(state moore.State, input moore.Input) (moore.State, error) {
@@ -44,6 +48,13 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		s.Open = false
 		s.SwitchValue = stateClosedForced
 		s.NotifyTicker = time.NewTicker(notifyPeriod)
+		s.gpio22, err = hwio.GetPin("gpio22")
+		if err != nil {
+			fmt.Println("gpio22 ", err)
+			s.isRelayAvailable = false
+		} else {
+			hwio.PinMode(s.gpio22, hwio.OUTPUT)
+		}
 		s.Init = true
 	}
 

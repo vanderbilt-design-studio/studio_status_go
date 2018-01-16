@@ -9,6 +9,7 @@ import (
 	"strings"
 	"os"
 	"github.com/sameer/fsm/moore"
+	"github.com/mrmorphic/hwio"
 )
 
 const defaultFont = "helvetica" // Helvetica font is beautiful for long distance reading.
@@ -131,10 +132,21 @@ func (s *SignState) Log() {
 	}()
 }
 
+func (s *SignState) DoRelay() {
+	if s.isRelayAvailable {
+		val := hwio.HIGH
+		if !s.Open {
+			val = hwio.LOW
+		}
+		hwio.DigitalWrite(s.gpio22, val)
+	}
+}
+
 var outputFunction moore.OutputFunction = func(state moore.State) {
 	s := state.(*SignState)
 	openvg.Start(s.Width, s.Height) // Allow draw commands
 	s.draw()                        // Do draw commands
 	openvg.End()                    // Disallow them
 	s.Notify()
+	s.DoRelay()
 }
