@@ -46,15 +46,13 @@ func (s *SignState) drawOpen(open bool) {
 	// White "Closed" on red background.
 	fill := white
 	s.BackgroundFill = red
-	text := "Closed"
 	// White "Open" on green background.
 	if open {
 		s.BackgroundFill = green
-		text = "Open"
 	}
 	// Draw that, centered and big.
 	openvg.FillRGB(openvg.UnwrapRGBA(fill))
-	openvg.TextMid(960, openvg.TextDepth(defaultFont, 400)+openvg.TextHeight(defaultFont, 100)+openvg.TextHeight(defaultFont, 100), text, defaultFont, 400)
+	openvg.TextMid(960, openvg.TextDepth(defaultFont, 400)+openvg.TextHeight(defaultFont, 100)+openvg.TextHeight(defaultFont, 100), s.Title, defaultFont, 400)
 }
 
 func (s *SignState) drawMentorOnDuty() {
@@ -62,11 +60,7 @@ func (s *SignState) drawMentorOnDuty() {
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		// White text
 		openvg.FillRGB(openvg.UnwrapRGBA(white))
-		dutyStr := "Mentor on Duty: "
-		now := time.Now()
-		// This should never ever fail, because it should've already been checked in isOpen().
-		dutyStr += names[int(now.Weekday())][((now.Hour() - 12) / 2)]
-		openvg.TextMid(960, openvg.TextDepth(defaultFont, 100), dutyStr, defaultFont, 100)
+		openvg.TextMid(960, openvg.TextDepth(defaultFont, 100), s.Subtitle, defaultFont, 100)
 	}
 }
 
@@ -89,16 +83,12 @@ func (s *SignState) Post() {
 	if x_api_key == "" {
 		return
 	}
-	title := "Closed"
-	if s.Open {
-		title = "Open"
-	}
+
 	// TODO: grab mentor on duty
-	subtitle := ""
 	payload := strings.NewReader(fmt.Sprintf(`{"bgColor": "rgb(%v,%v,%v)", "title": "%v", "subtitle": "%v"}`,
 		s.BackgroundFill.R, s.BackgroundFill.G, s.BackgroundFill.B,
-		title,
-		subtitle,
+		s.Title,
+		s.Subtitle,
 	))
 
 	req, err := http.NewRequest("POST", postUrl, payload)

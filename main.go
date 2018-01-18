@@ -29,6 +29,8 @@ type SignState struct {
 	Open           bool
 	SwitchValue    SwitchState
 	Motion         bool
+	Title          string
+	Subtitle       string
 	NotifyTicker   *time.Ticker
 	relayArduino   *serial.Port
 }
@@ -37,23 +39,46 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 	var err error = nil
 	s := state.(*SignState)
 	i := input.(*SignInput)
-	if s == nil {
-		openvg.Finish()
-	}
 	if !s.Init {
-		s.Width, s.Height = openvg.Init() // Start openvg
+		// Init to default state
+		s.Width, s.Height = openvg.Init()
 		s.BackgroundFill = white
 		s.Open = false
 		s.SwitchValue = stateClosedForced
+		s.Motion = false
+		s.Title = "Closed"
+		s.Subtitle = ""
 		s.NotifyTicker = time.NewTicker(notifyPeriod)
 		s.relayArduino = AcquireArduinoUID(32)
-		s.Init = true
+
+		s.Init = true // Mark as succeeded
 	}
 
+	// Put inputs into state struct
 	s.Open = i.IsOpen()
 	s.SwitchValue = i.GetSwitchValue()
 	s.Motion = i.IsThereMotion()
 
+	// State-based handling of tile
+	if s.Open {
+		s.Title = "Open"
+	} else {
+		s.Title = "Closed"
+	}
+
+	// State-based handling of subtitle
+	if s.Open && s.SwitchValue == stateOpenNormal {
+		now := time.Now()
+		// This should never ever fail, because it should've already been checked in isOpen().
+		s.Subtitle = "Mentor on Duty: " + names[int(now.Weekday())][((now.Hour() - 12) / 2)]
+	} else {
+		// Reset output string
+		s.Subtitle = ""
+	}
+
+	if s == nil { // This is the quit state. Cleanup after ourselves.
+		openvg.Finish()
+	}
 	return s, err
 }
 
