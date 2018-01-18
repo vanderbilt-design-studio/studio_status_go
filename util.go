@@ -17,8 +17,10 @@ func AcquireArduinoUID(uid byte) *serial.Port {
 				return serialPort
 			}
 			serialPort.Close()
+			fmt.Println("Wrong port for", uid)
+		} else {
+			fmt.Println("Failed to acquire serial port:", uid, err)
 		}
-		fmt.Println("Failed to acquire serial port:", uid, err)
 	}
 	return nil
 }
