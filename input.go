@@ -108,10 +108,10 @@ func (si *SignInput) GetSwitchValue() SwitchState {
 }
 
 const (
-	identReq        = 0
-	doorSensorReq   = 2
-	motionSensorReq = 4
-	relayChange     = 8
+	doorSensorReq   = 4
+	motionSensorReq = 8
+	relayChange     = 16
+	identReq        = 32
 )
 
 func (si *SignInput) IsDoorOpen() bool {
