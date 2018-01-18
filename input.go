@@ -32,12 +32,7 @@ func (si *SignInput) init() {
 			hwio.PinMode(si.gpio27, hwio.INPUT)
 		}
 	}
-	serialConf := &serial.Config{Name: "/dev/ttyACM0", Baud: 9600}
-	serialPort, err := serial.OpenPort(serialConf) // Try to open a serial port.
-	if err == nil { // Success
-		fmt.Println("Acquired serial port!")
-		si.doorArduino = serialPort
-	}
+	si.doorArduino = AcquireArduinoUID(16)
 }
 
 type SwitchState int
@@ -113,8 +108,10 @@ func (si *SignInput) GetSwitchValue() SwitchState {
 }
 
 const (
+	identReq        = 0
 	doorSensorReq   = 2
 	motionSensorReq = 4
+	relayChange     = 8
 )
 
 func (si *SignInput) IsDoorOpen() bool {

@@ -7,6 +7,7 @@ import (
 	"image/color"
 	"github.com/mrmorphic/hwio"
 	"fmt"
+	"github.com/tarm/serial"
 )
 
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert TPS to useful number
@@ -31,8 +32,7 @@ type SignState struct {
 	SwitchValue      SwitchState
 	Motion           bool
 	NotifyTicker     *time.Ticker
-	gpio22           hwio.Pin
-	isRelayAvailable bool
+	relayArduino     *serial.Port
 }
 
 var transitionFunction moore.TransitionFunction = func(state moore.State, input moore.Input) (moore.State, error) {
@@ -48,14 +48,7 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		s.Open = false
 		s.SwitchValue = stateClosedForced
 		s.NotifyTicker = time.NewTicker(notifyPeriod)
-		s.gpio22, err = hwio.GetPin("gpio22")
-		if err != nil {
-			fmt.Println("gpio22 ", err)
-			s.isRelayAvailable = false
-		} else {
-			s.isRelayAvailable = true
-			hwio.PinMode(s.gpio22, hwio.OUTPUT)
-		}
+		s.relayArduino = AcquireArduinoUID(32)
 		s.Init = true
 	}
 

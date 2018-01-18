@@ -9,7 +9,6 @@ import (
 	"strings"
 	"os"
 	"github.com/sameer/fsm/moore"
-	"github.com/mrmorphic/hwio"
 )
 
 const defaultFont = "helvetica" // Helvetica font is beautiful for long distance reading.
@@ -33,7 +32,6 @@ func (s *SignState) draw() {
 	s.drawDesignStudio()                                  // Draw the words "Design Studio"
 	s.drawOpen(s.Open)                                    // Handles whether the studio is open
 	s.drawMentorOnDuty()                                  // Mentor name if there is one on duty
-	// TODO: use an NPN transistor instead of servo
 }
 
 func (s *SignState) drawDesignStudio() {
@@ -133,12 +131,12 @@ func (s *SignState) Log() {
 }
 
 func (s *SignState) DoRelay() {
-	if s.isRelayAvailable {
-		val := hwio.HIGH
-		if !s.Open {
-			val = hwio.LOW
+	if s.relayArduino != nil {
+		if s.Open {
+			s.relayArduino.Write([]byte{relayChange, 2})
+		} else {
+			s.relayArduino.Write([]byte{relayChange, 0})
 		}
-		hwio.DigitalWrite(s.gpio22, val)
 	}
 }
 
