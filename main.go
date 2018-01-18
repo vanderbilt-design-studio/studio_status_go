@@ -5,8 +5,6 @@ import (
 	"github.com/sameer/fsm/moore"
 	"time"
 	"image/color"
-	"github.com/mrmorphic/hwio"
-	"fmt"
 	"github.com/tarm/serial"
 )
 
@@ -25,14 +23,14 @@ var names = [][]string{
 	{}} // No Saturday shifts
 
 type SignState struct {
-	Init             bool
-	Width, Height    int        // Display size
-	BackgroundFill   color.RGBA // Background fill
-	Open             bool
-	SwitchValue      SwitchState
-	Motion           bool
-	NotifyTicker     *time.Ticker
-	relayArduino     *serial.Port
+	Init           bool
+	Width, Height  int        // Display size
+	BackgroundFill color.RGBA // Background fill
+	Open           bool
+	SwitchValue    SwitchState
+	Motion         bool
+	NotifyTicker   *time.Ticker
+	relayArduino   *serial.Port
 }
 
 var transitionFunction moore.TransitionFunction = func(state moore.State, input moore.Input) (moore.State, error) {
