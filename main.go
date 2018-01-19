@@ -19,7 +19,7 @@ var names = [][]string{
 	{"", "Sophia Z", "Emily Mk", "Jonah H", ""},
 	{"", "Eric N", "Lauren B", "Sameer P", "Christina H"},
 	{"", "Alex B", "Emily Mc", "Braden B", "Jill B"},
-	{"", "Dominic G"},
+	{"", "Dominic G", "Josh P"},
 	{}} // No Saturday shifts
 
 type SignState struct {
