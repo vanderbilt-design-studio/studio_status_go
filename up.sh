@@ -5,11 +5,10 @@ cd /home/pi/go/src/github.com/vanderbilt-design-studio/studio_status_go
 git pull
 go build
 while :
-do 
-	./studio_status_go & # Start the program and send it to the background
-	sleep 20             # Sleep for 20s
+do
+	(sleep 15; ./studio_status_go) & # Wait 15s, start program and send to background
+	sleep 30             # Sleep for 30s
 	kill %1              # Kill it
 	./studio_status_go 1>>crashes.log 2>>crashes.log # Start it again & log all output
-	date >> crashes.log  # Log crash times for debugging
+	date >> crashes.log  # Append crash times to log for debugging
 done
-
