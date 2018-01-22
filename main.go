@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/sameer/openvg"
 	"github.com/sameer/fsm/moore"
-	"time"
-	"image/color"
+	"github.com/sameer/openvg"
 	"github.com/tarm/serial"
+	"image/color"
+	"time"
 )
 
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert TPS to useful number
@@ -14,7 +14,7 @@ const notifyPeriod = time.Duration(5 * time.Second)
 // Mentor names array. Each row is a day of the week (sun, mon, ..., sat). Each element in a
 // row is a mentor timeslot starting at 12PM, where each slot is 2 hours long.
 var names = [][]string{
-	{"", "", "Nick B", "Foard N", ""},
+	{"", "Iliya L", "Nick B", "Foard N", ""},
 	{"", "Lin L", "Amaury P", "Jeremy D", "Kurt L"},
 	{"", "Sophia Z", "Emily Mk", "Jonah H", ""},
 	{"", "Eric N", "Lauren B", "Sameer P", "Christina H"},
@@ -70,7 +70,10 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		now := time.Now()
 		// This should never ever fail, because it should've already been checked in isOpen().
-		s.Subtitle = "Mentor on Duty: " + names[int(now.Weekday())][((now.Hour() - 12) / 2)]
+		i, j := int(now.Weekday()), now.Hour()
+		if i >= 0 && j >= 0 && i < len(names) && j < len(names[i]) {
+			s.Subtitle = "Mentor on Duty: " + names[i][j]
+		}
 	} else {
 		// Reset output string
 		s.Subtitle = ""

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/tarm/serial"
 	"fmt"
+	"github.com/tarm/serial"
 )
 
 func AcquireArduinoUID(uid byte) *serial.Port {

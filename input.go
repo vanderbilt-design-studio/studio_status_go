@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/mrmorphic/hwio"
-	"github.com/tarm/serial"
 	"fmt"
+	"github.com/mrmorphic/hwio"
 	"github.com/sameer/fsm/moore"
+	"github.com/tarm/serial"
 	"time"
 )
 
@@ -127,7 +127,7 @@ func (si *SignInput) IsDoorOpen() bool {
 	if bytesRead == 0 || err != nil {
 		return true
 	}
-	return buf[0] != 0; // 0 == false aka door closed
+	return buf[0] != 0 // 0 == false aka door closed
 	// Add onto the average
 	//doorMovingAverage.Add(float64(val))
 	//return doorMovingAverage.Avg() > 200 // The door sees light on average
@@ -147,7 +147,7 @@ func (si *SignInput) IsThereMotion() bool {
 	if bytesRead == 0 || err != nil {
 		return false
 	}
-	return buf[0] != 0;
+	return buf[0] != 0
 }
 
 var inputFunction moore.InputFunction = func() moore.InputFunction {

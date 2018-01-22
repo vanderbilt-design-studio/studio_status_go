@@ -1,14 +1,14 @@
 package main
 
 import (
+	"fmt"
+	"github.com/sameer/fsm/moore"
 	"github.com/sameer/openvg"
-	"time"
 	"image/color"
 	"net/http"
-	"fmt"
-	"strings"
 	"os"
-	"github.com/sameer/fsm/moore"
+	"strings"
+	"time"
 )
 
 const defaultFont = "helvetica" // Helvetica font is beautiful for long distance reading.
