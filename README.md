@@ -1,6 +1,8 @@
 # Studio Status
 ### *Golang program for the Studio Status screen in the Design Studio window*
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/vanderbilt-design-studio/studio_status_go)](https://goreportcard.com/report/github.com/vanderbilt-design-studio/studio_status_go)
+
 ## Setup
 1. Follow the instructions [here](https://www.raspberrypi.org/documentation/installation/installing-images/) to install the Raspberry PI OS on a micro SD card. **Install the headless version**
 2. Once installed, put that micro sd into the PI. There's a slot, make sure you put it in the right way and don't just jam it in.
