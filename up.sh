@@ -1,6 +1,6 @@
 #!/bin/bash
 # Bash script to keep the studio status program running, even in the event of crashes.
-GOPATH=/home/pi/go
+export GOPATH=/home/pi/go
 cd /home/pi/go/src/github.com/vanderbilt-design-studio/studio_status_go
 git pull
 go build
