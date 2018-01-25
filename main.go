@@ -11,7 +11,7 @@ import (
 
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert TPS to useful number
 const notifyPeriod = time.Duration(5 * time.Second)
-const mentorOnDutyStr = "Mentor%v:"
+const mentorOnDutyStr = "Mentor%v on Duty"
 
 type SignState struct {
 	Init           bool
