@@ -1,9 +1,10 @@
 package main
 
 import "time"
+
 type mentor_shift struct {
-	hour int
-	weekday time.Weekday
+	hour     int
+	weekday  time.Weekday
 	duration time.Duration
 	name     string
 }
@@ -11,7 +12,7 @@ type mentor_shift struct {
 type mentor_shifts []mentor_shift
 
 func MustParse(layout, value string) time.Time {
-	if t, err := time.Parse(layout, value + " CST"); err != nil {
+	if t, err := time.Parse(layout, value+" CST"); err != nil {
 		panic(err)
 	} else {
 		return t

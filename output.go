@@ -44,7 +44,7 @@ func (s *SignState) drawDesignStudio() {
 	// Set the drawing color to be white
 	openvg.FillRGB(openvg.UnwrapRGBA(white))
 	// Draw text at a size of 200 in Helvetica Bold
-	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, studioSize) + openvg.TextDepth(defaultFont, studioSize), "Design Studio", defaultFont, studioSize)
+	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, studioSize)+openvg.TextDepth(defaultFont, studioSize), "Design Studio", defaultFont, studioSize)
 }
 
 func (s *SignState) drawOpen(open bool) {
@@ -57,7 +57,7 @@ func (s *SignState) drawOpen(open bool) {
 	}
 	// Draw that, centered and big.
 	openvg.FillRGB(openvg.UnwrapRGBA(fill))
-	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, studioSize)-openvg.TextHeight(defaultFont, titleSize)+openvg.TextDepth(defaultFont, studioSize)+openvg.TextDepth(defaultFont, titleSize), s.Title, defaultFont, titleSize)
+	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, studioSize)-openvg.TextDepth(defaultFont, studioSize)-openvg.TextHeight(defaultFont, titleSize), s.Title, defaultFont, titleSize)
 }
 
 func (s *SignState) drawMentorOnDuty() {
@@ -65,7 +65,7 @@ func (s *SignState) drawMentorOnDuty() {
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		// White text
 		openvg.FillRGB(openvg.UnwrapRGBA(white))
-		openvg.TextMid(960, openvg.TextHeight(defaultFont, subtitleSize) + openvg.TextDepth(defaultFont, subtitleSize), "Mentor(s) on Duty:", defaultFont, subtitleSize)
+		openvg.TextMid(960, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), "Mentor(s) on Duty:", defaultFont, subtitleSize)
 		openvg.TextMid(960, openvg.TextDepth(defaultFont, subtitleSize), s.Subtitle, defaultFont, subtitleSize)
 	}
 }
