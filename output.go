@@ -36,11 +36,20 @@ func (s *SignState) draw() {
 }
 
 const (
-	studioSize   = 200
-	titleSize    = 400
-	subtitleSize = 100
-	timeSize     = 100
+	studioSize       = 200
+	titleSize        = 400
+	subtitleSize     = 100
+	timeSize         = 100
+	mentorOnDutyStrf = "Mentor%v on Duty:"
 )
+
+func makeMentorOnDutyStr(subtitle string) string {
+	multi := ""
+	if strings.ContainsRune(subtitle, '&') {
+		multi = "s"
+	}
+	return fmt.Sprintf(mentorOnDutyStrf, multi)
+}
 
 func (s *SignState) drawDesignStudio() {
 	// Set the drawing color to be white
@@ -67,7 +76,7 @@ func (s *SignState) drawMentorOnDuty() {
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		// White text
 		openvg.FillRGB(openvg.UnwrapRGBA(white))
-		openvg.Text(0, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), "Mentor(s) on Duty:", defaultFont, subtitleSize)
+		openvg.Text(0, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), makeMentorOnDutyStr(s.Subtitle), defaultFont, subtitleSize)
 		openvg.Text(0, openvg.TextDepth(defaultFont, subtitleSize), s.Subtitle, defaultFont, subtitleSize)
 	}
 }
@@ -99,7 +108,7 @@ func (s *SignState) Post() {
 
 	// TODO: grab mentor on duty
 	if s.Subtitle != "" {
-		s.Subtitle = "Mentor on Duty: " + s.Subtitle
+		s.Subtitle = makeMentorOnDutyStr(s.Subtitle) + s.Subtitle
 	}
 	payload := strings.NewReader(fmt.Sprintf(`{"bgColor": "rgb(%v,%v,%v)", "title": "%v", "subtitle": "%v"}`,
 		s.BackgroundFill.R, s.BackgroundFill.G, s.BackgroundFill.B,
