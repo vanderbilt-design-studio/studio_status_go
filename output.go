@@ -32,6 +32,7 @@ func (s *SignState) draw() {
 	s.drawDesignStudio()                                  // Draw the words "Design Studio"
 	s.drawOpen(s.Open)                                    // Handles whether the studio is open
 	s.drawMentorOnDuty()                                  // Mentor name if there is one on duty
+	s.drawTime()
 }
 
 const (
