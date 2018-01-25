@@ -39,7 +39,7 @@ const (
 	studioSize   = 200
 	titleSize    = 400
 	subtitleSize = 100
-	timeSize     = 200
+	timeSize     = 100
 )
 
 func (s *SignState) drawDesignStudio() {
