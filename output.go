@@ -57,7 +57,7 @@ func (s *SignState) drawOpen(open bool) {
 	}
 	// Draw that, centered and big.
 	openvg.FillRGB(openvg.UnwrapRGBA(fill))
-	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, studioSize)-openvg.TextHeight(defaultFont, titleSize), s.Title, defaultFont, titleSize)
+	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, studioSize)-openvg.TextHeight(defaultFont, titleSize)+openvg.TextHeight(defaultFont, studioSize), s.Title, defaultFont, titleSize)
 }
 
 func (s *SignState) drawMentorOnDuty() {
@@ -65,7 +65,7 @@ func (s *SignState) drawMentorOnDuty() {
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		// White text
 		openvg.FillRGB(openvg.UnwrapRGBA(white))
-		openvg.TextMid(960, openvg.TextDepth(defaultFont, subtitleSize)*2, "Mentor(s) on Duty:", defaultFont, subtitleSize)
+		openvg.TextMid(960, openvg.TextHeight(defaultFont, subtitleSize), "Mentor(s) on Duty:", defaultFont, subtitleSize)
 		openvg.TextMid(960, openvg.TextDepth(defaultFont, subtitleSize), s.Subtitle, defaultFont, subtitleSize)
 	}
 }
