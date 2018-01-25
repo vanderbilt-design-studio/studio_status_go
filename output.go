@@ -57,7 +57,7 @@ func (s *SignState) drawOpen(open bool) {
 	}
 	// Draw that, centered and big.
 	openvg.FillRGB(openvg.UnwrapRGBA(fill))
-	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, studioSize)-openvg.TextDepth(defaultFont, studioSize)-openvg.TextHeight(defaultFont, titleSize), s.Title, defaultFont, titleSize)
+	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, studioSize)-openvg.TextDepth(defaultFont, studioSize)-openvg.TextDepth(defaultFont, titleSize)-openvg.TextHeight(defaultFont, titleSize)/2, s.Title, defaultFont, titleSize)
 }
 
 func (s *SignState) drawMentorOnDuty() {
