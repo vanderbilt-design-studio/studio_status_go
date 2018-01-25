@@ -6,10 +6,12 @@ import (
 	"github.com/tarm/serial"
 	"image/color"
 	"time"
+	"fmt"
 )
 
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert TPS to useful number
 const notifyPeriod = time.Duration(5 * time.Second)
+const mentorOnDutyStr = "Mentor%v on Duty"
 
 type SignState struct {
 	Init           bool
@@ -58,12 +60,15 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 	// State-based handling of subtitle
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		s.Subtitle = ""
+		multiMentor := ""
 		for _, mentorShift := range shifts.getMentorsOnDuty() {
 			if s.Subtitle != "" {
+				multiMentor = "s"
 				s.Subtitle += " & "
 			}
 			s.Subtitle += mentorShift.name
 		}
+		s.Subtitle = fmt.Sprintf(mentorOnDutyStr, multiMentor) + s.Subtitle
 	} else {
 		// Reset output string
 		s.Subtitle = ""

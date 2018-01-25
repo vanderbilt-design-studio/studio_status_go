@@ -67,7 +67,11 @@ func (s *SignState) drawMentorOnDuty() {
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		// White text
 		openvg.FillRGB(openvg.UnwrapRGBA(white))
-		openvg.Text(0, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), "Mentor(s) on Duty:", defaultFont, subtitleSize)
+		multiMentor := ""
+		if strings.ContainsRune(s.Subtitle, '&') {
+			multiMentor = "s"
+		}
+		openvg.Text(0, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), fmt.Sprintf(mentorOnDutyStr, multiMentor), defaultFont, subtitleSize)
 		openvg.Text(0, openvg.TextDepth(defaultFont, subtitleSize), s.Subtitle, defaultFont, subtitleSize)
 	}
 }
@@ -76,9 +80,6 @@ func (s *SignState) drawTime() {
 	now := time.Now()
 	openvg.TextEnd(1920, openvg.TextHeight(defaultFont, timeSize)+openvg.TextDepth(defaultFont, timeSize), now.Format(time.Kitchen), defaultFont, timeSize)
 }
-
-const postUrl = "https://ds-sign.yunyul.in"
-const logFilename = "activity.log"
 
 func (s *SignState) Notify() {
 	select {
@@ -92,14 +93,18 @@ func (s *SignState) Notify() {
 }
 
 func (s *SignState) Post() {
+	const postUrl = "https://ds-sign.yunyul.in"
 	x_api_key := os.Getenv("x_api_key")
 	if x_api_key == "" {
 		return
 	}
 
-	// TODO: grab mentor on duty
 	if s.Subtitle != "" {
-		s.Subtitle = "Mentor on Duty: " + s.Subtitle
+		multiOffset := 0
+		if strings.ContainsRune(s.Subtitle, '&') {
+			multiOffset = 1
+		}
+		s.Subtitle = s.Subtitle[:5+multiOffset] + s.Subtitle[14+multiOffset:]
 	}
 	payload := strings.NewReader(fmt.Sprintf(`{"bgColor": "rgb(%v,%v,%v)", "title": "%v", "subtitle": "%v"}`,
 		s.BackgroundFill.R, s.BackgroundFill.G, s.BackgroundFill.B,
@@ -122,6 +127,7 @@ func (s *SignState) Post() {
 }
 
 func (s *SignState) Log() {
+	const logFilename = "activity.log"
 	stateCopy := *s
 	go func() {
 		logFile, err := os.OpenFile(logFilename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
