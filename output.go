@@ -38,6 +38,7 @@ const (
 	studioSize   = 200
 	titleSize    = 400
 	subtitleSize = 100
+	timeSize     = 200
 )
 
 func (s *SignState) drawDesignStudio() {
@@ -65,9 +66,14 @@ func (s *SignState) drawMentorOnDuty() {
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		// White text
 		openvg.FillRGB(openvg.UnwrapRGBA(white))
-		openvg.TextMid(960, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), "Mentor(s) on Duty:", defaultFont, subtitleSize)
-		openvg.TextMid(960, openvg.TextDepth(defaultFont, subtitleSize), s.Subtitle, defaultFont, subtitleSize)
+		openvg.Text(0, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), "Mentor(s) on Duty:", defaultFont, subtitleSize)
+		openvg.Text(0, openvg.TextDepth(defaultFont, subtitleSize), s.Subtitle, defaultFont, subtitleSize)
 	}
+}
+
+func (s *SignState) drawTime() {
+	now := time.Now()
+	openvg.TextEnd(1920, openvg.TextDepth(defaultFont, timeSize), now.Format(time.Kitchen), defaultFont, timeSize)
 }
 
 const postUrl = "https://ds-sign.yunyul.in"
