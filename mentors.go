@@ -57,7 +57,7 @@ func (this mentor_shifts) getMentorsOnDuty() (mentorOnDuty []mentor_shift) {
 	y, m, d := now.AddDate(0, 0, -int(now.Weekday())).Date()
 	mentorsOnDuty := make([]mentor_shift, 0, 2)
 	for _, shift := range this {
-		shiftStart := shift.start.AddDate(y, int(m), d)
+		shiftStart := shift.start.AddDate(y, int(m), d + int(shift.start.Weekday()))
 		if shiftStart.Before(now) && shiftStart.Add(shift.duration).After(now) {
 			mentorsOnDuty = append(mentorsOnDuty, shift)
 		}
