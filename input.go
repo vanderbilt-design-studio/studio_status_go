@@ -5,7 +5,6 @@ import (
 	"github.com/mrmorphic/hwio"
 	"github.com/sameer/fsm/moore"
 	"github.com/tarm/serial"
-	"time"
 )
 
 type SignInput struct {
@@ -44,24 +43,8 @@ const (
 )
 
 func (si *SignInput) IsOpen() bool {
-	// Parse time down to important values
-	t := time.Now()
-	dayOfWeek := int(t.Weekday())
-	currentHour := t.Hour()
 	// Logic to determine if the studio is likely open.
-	isOpen := false
-	// The studio can only be normally open after 12PM & if the day of week is valid.
-	if currentHour >= 12 && dayOfWeek > -1 && dayOfWeek < 7 {
-		// Determine when the day's shifts end.
-		endOfDayHour := len(names[dayOfWeek])*2 + 12
-		// Turn that into an index into the current names array row
-		idx := (currentHour - 12) / 2
-		// The time right now should be before the end of the shifts, idx should be within
-		// the bounds of the array, and this should not be a day with no shifts.
-		if currentHour < endOfDayHour && idx < len(names[dayOfWeek]) && idx > -1 && len(names[dayOfWeek][idx]) != 0 {
-			isOpen = true // Normal open state
-		}
-	}
+	isOpen := len(shifts.getMentorsOnDuty()) > 0
 	// Now check the switch state. This is a DPDT switch with the states I (normal), II (force open), and O (force closed)
 	switchValue := si.GetSwitchValue()
 	if switchValue == stateOpenNormal {
