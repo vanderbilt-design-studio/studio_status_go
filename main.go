@@ -11,17 +11,6 @@ import (
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert TPS to useful number
 const notifyPeriod = time.Duration(5 * time.Second)
 
-// Mentor names array. Each row is a day of the week (sun, mon, ..., sat). Each element in a
-// row is a mentor timeslot starting at 12PM, where each slot is 2 hours long.
-var names = [][]string{
-	{"", "Iliya L", "Nick B", "Foard N", ""},
-	{"", "Lin L", "Amaury P", "Jeremy D", "Kurt L"},
-	{"", "Sophia Z", "Emily Mk", "Jonah H", ""},
-	{"", "Eric N", "Lauren B", "Sameer P", "Christina H"},
-	{"", "Alex B", "Emily Mc", "Braden B", "Jill B"},
-	{"", "Dominic G", "Josh P"},
-	{}} // No Saturday shifts
-
 type SignState struct {
 	Init           bool
 	Width, Height  int        // Display size
@@ -68,11 +57,12 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 
 	// State-based handling of subtitle
 	if s.Open && s.SwitchValue == stateOpenNormal {
-		now := time.Now()
-		// This should never ever fail, because it should've already been checked in isOpen().
-		i, j := int(now.Weekday()), now.Hour()
-		if i >= 0 && j >= 0 && i < len(names) && j < len(names[i]) {
-			s.Subtitle = "Mentor on Duty: " + names[i][j]
+		s.Subtitle = ""
+		for _, mentorShift := range shifts.getMentorsOnDuty() {
+			if s.Subtitle != "" {
+				s.Subtitle += " & "
+			}
+			s.Subtitle += mentorShift.name
 		}
 	} else {
 		// Reset output string
