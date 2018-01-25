@@ -1,7 +1,6 @@
 package main
 
 import "time"
-
 type mentor_shift struct {
 	start    time.Time
 	weekday time.Weekday
@@ -12,14 +11,14 @@ type mentor_shift struct {
 type mentor_shifts []mentor_shift
 
 func MustParse(layout, value string) time.Time {
-	if t, err := time.Parse(layout, value); err != nil {
+	if t, err := time.Parse(layout, value + " CST"); err != nil {
 		panic(err)
 	} else {
 		return t
 	}
 }
 
-const mentorTimeLayout = "3:00PM"
+const mentorTimeLayout = "3:00PM MST"
 const mentorDefaultShiftDuration = time.Duration(time.Hour * 2)
 
 // Mentor names array. Each row is a day of the week (sun, mon, ..., sat). Each element in a
@@ -46,19 +45,19 @@ var shifts = mentor_shifts{
 	{MustParse(mentorTimeLayout, "2:00PM"), time.Friday, mentorDefaultShiftDuration, "Dominic G"},
 	{MustParse(mentorTimeLayout, "4:00PM"), time.Friday, mentorDefaultShiftDuration, "Josh P"},
 
-	{MustParse(mentorTimeLayout, "Tue 3:00PM"), time.Tuesday, mentorDefaultShiftDuration, "David L"},
-	{MustParse(mentorTimeLayout, "Tue 5:00PM"), time.Tuesday, mentorDefaultShiftDuration, "Yunyu L"},
-	{MustParse(mentorTimeLayout, "Wed 5:00PM"), time.Wednesday, mentorDefaultShiftDuration, "Swapnil P"},
-	{MustParse(mentorTimeLayout, "Thu 3:00PM"), time.Thursday, mentorDefaultShiftDuration, "Joey H"},
-	{MustParse(mentorTimeLayout, "Thu 5:00PM"), time.Thursday, mentorDefaultShiftDuration, "Jesse L"},
+	{MustParse(mentorTimeLayout, "3:00PM"), time.Tuesday, mentorDefaultShiftDuration, "David L"},
+	{MustParse(mentorTimeLayout, "5:00PM"), time.Tuesday, mentorDefaultShiftDuration, "Yunyu L"},
+	{MustParse(mentorTimeLayout, "5:00PM"), time.Wednesday, mentorDefaultShiftDuration, "Swapnil P"},
+	{MustParse(mentorTimeLayout, "3:00PM"), time.Thursday, mentorDefaultShiftDuration, "Joey H"},
+	{MustParse(mentorTimeLayout, "5:00PM"), time.Thursday, mentorDefaultShiftDuration, "Jesse L"},
 }
 
-func (this mentor_shifts) getMentorsOnDuty() (mentorOnDuty []mentor_shift) {
+func (this mentor_shifts) getMentorsOnDuty() (mentorsOnDuty []mentor_shift) {
 	now := time.Now()
 	y, m, d := now.Date()
-	mentorsOnDuty := make([]mentor_shift, 0, 2)
+	mentorsOnDuty = make([]mentor_shift, 0, 2)
 	for _, shift := range this {
-		shiftStart := shift.start.AddDate(y, int(m), d)
+		shiftStart := shift.start.AddDate(y, int(m) - 1, d - 1)
 		if shift.weekday == now.Weekday() && shiftStart.Before(now) && shiftStart.Add(shift.duration).After(now) {
 			mentorsOnDuty = append(mentorsOnDuty, shift)
 		}
