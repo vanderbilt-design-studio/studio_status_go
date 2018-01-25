@@ -74,7 +74,7 @@ func (s *SignState) drawMentorOnDuty() {
 
 func (s *SignState) drawTime() {
 	now := time.Now()
-	openvg.TextEnd(1920, openvg.TextDepth(defaultFont, timeSize), now.Format(time.Kitchen), defaultFont, timeSize)
+	openvg.TextEnd(1920, openvg.TextDepth(defaultFont, timeSize)+openvg.TextDepth(defaultFont, timeSize), now.Format(time.Kitchen), defaultFont, timeSize)
 }
 
 const postUrl = "https://ds-sign.yunyul.in"
