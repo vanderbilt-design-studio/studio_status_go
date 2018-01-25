@@ -18,7 +18,7 @@ func MustParse(layout, value string) time.Time {
 	}
 }
 
-const mentorTimeLayout = "3:00PM MST"
+const mentorTimeLayout = "3:04PM MST"
 const mentorDefaultShiftDuration = time.Duration(time.Hour * 2)
 
 // Mentor names array. Each row is a day of the week (sun, mon, ..., sat). Each element in a
