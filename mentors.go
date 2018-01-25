@@ -2,7 +2,7 @@ package main
 
 import "time"
 type mentor_shift struct {
-	start    time.Time
+	hour int
 	weekday time.Weekday
 	duration time.Duration
 	name     string
@@ -24,32 +24,32 @@ const mentorDefaultShiftDuration = time.Duration(time.Hour * 2)
 // Mentor names array. Each row is a day of the week (sun, mon, ..., sat). Each element in a
 // row is a mentor timeslot starting at 12PM, where each slot is 2 hours long.
 var shifts = mentor_shifts{
-	{MustParse(mentorTimeLayout, "2:00PM"), time.Sunday, mentorDefaultShiftDuration, "Iliya L"},
-	{MustParse(mentorTimeLayout, "4:00PM"), time.Sunday, mentorDefaultShiftDuration, "Nick B"},
-	{MustParse(mentorTimeLayout, "6:00PM"), time.Sunday, mentorDefaultShiftDuration, "Foard N"},
-	{MustParse(mentorTimeLayout, "2:00PM"), time.Monday, mentorDefaultShiftDuration, "Lin L"},
-	{MustParse(mentorTimeLayout, "4:00PM"), time.Monday, mentorDefaultShiftDuration, "Amaury P"},
-	{MustParse(mentorTimeLayout, "6:00PM"), time.Monday, mentorDefaultShiftDuration, "Jeremy D"},
-	{MustParse(mentorTimeLayout, "8:00PM"), time.Monday, mentorDefaultShiftDuration, "Kurt L"},
-	{MustParse(mentorTimeLayout, "2:00PM"), time.Tuesday, mentorDefaultShiftDuration, "Sophia Z"},
-	{MustParse(mentorTimeLayout, "4:00PM"), time.Tuesday, mentorDefaultShiftDuration, "Emily Mk"},
-	{MustParse(mentorTimeLayout, "6:00PM"), time.Tuesday, mentorDefaultShiftDuration, "Jonah H"},
-	{MustParse(mentorTimeLayout, "2:00PM"), time.Wednesday, mentorDefaultShiftDuration, "Eric N"},
-	{MustParse(mentorTimeLayout, "4:00PM"), time.Wednesday, mentorDefaultShiftDuration, "Lauren B"},
-	{MustParse(mentorTimeLayout, "6:00PM"), time.Wednesday, mentorDefaultShiftDuration, "Sameer P"},
-	{MustParse(mentorTimeLayout, "8:00PM"), time.Wednesday, mentorDefaultShiftDuration, "Christina H"},
-	{MustParse(mentorTimeLayout, "2:00PM"), time.Thursday, mentorDefaultShiftDuration, "Alex B"},
-	{MustParse(mentorTimeLayout, "4:00PM"), time.Thursday, mentorDefaultShiftDuration, "Emily Mc"},
-	{MustParse(mentorTimeLayout, "6:00PM"), time.Thursday, mentorDefaultShiftDuration, "Braden B"},
-	{MustParse(mentorTimeLayout, "8:00PM"), time.Thursday, mentorDefaultShiftDuration, "Jill B"},
-	{MustParse(mentorTimeLayout, "2:00PM"), time.Friday, mentorDefaultShiftDuration, "Dominic G"},
-	{MustParse(mentorTimeLayout, "4:00PM"), time.Friday, mentorDefaultShiftDuration, "Josh P"},
+	{14, time.Sunday, mentorDefaultShiftDuration, "Iliya L"},
+	{16, time.Sunday, mentorDefaultShiftDuration, "Nick B"},
+	{18, time.Sunday, mentorDefaultShiftDuration, "Foard N"},
+	{14, time.Monday, mentorDefaultShiftDuration, "Lin L"},
+	{16, time.Monday, mentorDefaultShiftDuration, "Amaury P"},
+	{18, time.Monday, mentorDefaultShiftDuration, "Jeremy D"},
+	{20, time.Monday, mentorDefaultShiftDuration, "Kurt L"},
+	{14, time.Tuesday, mentorDefaultShiftDuration, "Sophia Z"},
+	{16, time.Tuesday, mentorDefaultShiftDuration, "Emily Mk"},
+	{18, time.Tuesday, mentorDefaultShiftDuration, "Jonah H"},
+	{14, time.Wednesday, mentorDefaultShiftDuration, "Eric N"},
+	{16, time.Wednesday, mentorDefaultShiftDuration, "Lauren B"},
+	{18, time.Wednesday, mentorDefaultShiftDuration, "Sameer P"},
+	{20, time.Wednesday, mentorDefaultShiftDuration, "Christina H"},
+	{14, time.Thursday, mentorDefaultShiftDuration, "Alex B"},
+	{16, time.Thursday, mentorDefaultShiftDuration, "Emily Mc"},
+	{18, time.Thursday, mentorDefaultShiftDuration, "Braden B"},
+	{20, time.Thursday, mentorDefaultShiftDuration, "Jill B"},
+	{14, time.Friday, mentorDefaultShiftDuration, "Dominic G"},
+	{16, time.Friday, mentorDefaultShiftDuration, "Josh P"},
 
-	{MustParse(mentorTimeLayout, "3:00PM"), time.Tuesday, mentorDefaultShiftDuration, "David L"},
-	{MustParse(mentorTimeLayout, "5:00PM"), time.Tuesday, mentorDefaultShiftDuration, "Yunyu L"},
-	{MustParse(mentorTimeLayout, "5:00PM"), time.Wednesday, mentorDefaultShiftDuration, "Swapnil P"},
-	{MustParse(mentorTimeLayout, "3:00PM"), time.Thursday, mentorDefaultShiftDuration, "Joey H"},
-	{MustParse(mentorTimeLayout, "5:00PM"), time.Thursday, mentorDefaultShiftDuration, "Jesse L"},
+	{15, time.Tuesday, mentorDefaultShiftDuration, "David L"},
+	{17, time.Tuesday, mentorDefaultShiftDuration, "Yunyu L"},
+	{17, time.Wednesday, mentorDefaultShiftDuration, "Swapnil P"},
+	{15, time.Thursday, mentorDefaultShiftDuration, "Joey H"},
+	{17, time.Thursday, mentorDefaultShiftDuration, "Jesse L"},
 }
 
 func (this mentor_shifts) getMentorsOnDuty() (mentorsOnDuty []mentor_shift) {
@@ -57,7 +57,7 @@ func (this mentor_shifts) getMentorsOnDuty() (mentorsOnDuty []mentor_shift) {
 	y, m, d := now.Date()
 	mentorsOnDuty = make([]mentor_shift, 0, 2)
 	for _, shift := range this {
-		shiftStart := shift.start.AddDate(y, int(m) - 1, d - 1)
+		shiftStart := time.Date(y, m, d, shift.hour, 0, 0, 0, time.Local)
 		if shift.weekday == now.Weekday() && shiftStart.Before(now) && shiftStart.Add(shift.duration).After(now) {
 			mentorsOnDuty = append(mentorsOnDuty, shift)
 		}
