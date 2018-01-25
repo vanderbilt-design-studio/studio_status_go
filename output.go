@@ -67,11 +67,6 @@ func (s *SignState) drawMentorOnDuty() {
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		// White text
 		openvg.FillRGB(openvg.UnwrapRGBA(white))
-		multiMentor := ""
-		if strings.ContainsRune(s.Subtitle, '&') {
-			multiMentor = "s"
-		}
-		openvg.Text(0, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), fmt.Sprintf(mentorOnDutyStr, multiMentor), defaultFont, subtitleSize)
 		openvg.Text(0, openvg.TextDepth(defaultFont, subtitleSize), s.Subtitle, defaultFont, subtitleSize)
 	}
 }
@@ -99,13 +94,6 @@ func (s *SignState) Post() {
 		return
 	}
 
-	if s.Subtitle != "" {
-		multiOffset := 0
-		if strings.ContainsRune(s.Subtitle, '&') {
-			multiOffset = 1
-		}
-		s.Subtitle = s.Subtitle[:5+multiOffset] + s.Subtitle[14+multiOffset:]
-	}
 	payload := strings.NewReader(fmt.Sprintf(`{"bgColor": "rgb(%v,%v,%v)", "title": "%v", "subtitle": "%v"}`,
 		s.BackgroundFill.R, s.BackgroundFill.G, s.BackgroundFill.B,
 		s.Title,
