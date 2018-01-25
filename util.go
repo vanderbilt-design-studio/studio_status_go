@@ -18,10 +18,10 @@ var AcquireArduinoUID = func() func(byte) *serial.Port {
 				serialPort.Write([]byte{identReq})
 				buf := make([]byte, 1)
 				serialPort.Read(buf)
-				serialPort.Close()
 				if buf[0] == uid {
 					return serialPort
 				}
+				serialPort.Close()
 				fmt.Println("Wrong port for", uid)
 			} else {
 				fmt.Println("Failed to acquire serial port:", uid, err)
