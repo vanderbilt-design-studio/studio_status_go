@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/sameer/fsm/moore"
-	"github.com/sameer/openvg"
 	"image/color"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/sameer/fsm/moore"
+	"github.com/sameer/openvg"
 )
 
 const defaultFont = "helvetica" // Helvetica font is beautiful for long distance reading.
@@ -41,14 +42,19 @@ const (
 	subtitleSize     = 100
 	timeSize         = 100
 	mentorOnDutyStrf = "Mentor%v on Duty: "
+	mentorPrefixStrf = "Mentor%v: "
 )
 
-func makeMentorOnDutyStr(subtitle string) string {
+func makeMentorOnDutyStr(subtitle string, onDutyText bool) string {
 	multi := ""
 	if strings.ContainsRune(subtitle, '&') {
 		multi = "s"
 	}
-	return fmt.Sprintf(mentorOnDutyStrf, multi)
+	if onDutyText {
+		return fmt.Sprintf(mentorOnDutyStrf, multi)
+	} else {
+		return fmt.Sprintf(mentorPrefixStrf, multi)
+	}
 }
 
 func (s *SignState) drawDesignStudio() {
@@ -76,7 +82,7 @@ func (s *SignState) drawMentorOnDuty() {
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		// White text
 		openvg.FillRGB(openvg.UnwrapRGBA(white))
-		openvg.Text(0, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), makeMentorOnDutyStr(s.Subtitle), defaultFont, subtitleSize)
+		openvg.Text(0, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), makeMentorOnDutyStr(s.Subtitle, true), defaultFont, subtitleSize)
 		openvg.Text(0, openvg.TextDepth(defaultFont, subtitleSize), s.Subtitle, defaultFont, subtitleSize)
 	}
 }
@@ -108,7 +114,7 @@ func (s *SignState) Post() {
 
 	// TODO: grab mentor on duty
 	if s.Subtitle != "" {
-		s.Subtitle = makeMentorOnDutyStr(s.Subtitle) + s.Subtitle
+		s.Subtitle = makeMentorOnDutyStr(s.Subtitle, false) + s.Subtitle
 	}
 	payload := strings.NewReader(fmt.Sprintf(`{"bgColor": "rgb(%v,%v,%v)", "title": "%v", "subtitle": "%v"}`,
 		s.BackgroundFill.R, s.BackgroundFill.G, s.BackgroundFill.B,
