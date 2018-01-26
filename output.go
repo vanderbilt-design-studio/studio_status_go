@@ -40,7 +40,7 @@ const (
 	titleSize        = 400
 	subtitleSize     = 100
 	timeSize         = 100
-	mentorOnDutyStrf = "Mentor%v on Duty:"
+	mentorOnDutyStrf = "Mentor%v on Duty: "
 )
 
 func makeMentorOnDutyStr(subtitle string) string {
