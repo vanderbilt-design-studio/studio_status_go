@@ -3,20 +3,20 @@ package main
 import (
 	"fmt"
 
+	"bytes"
 	"github.com/sameer/fsm/moore"
 	"github.com/sameer/openvg"
-	"sync/atomic"
-	"os/signal"
-	"image/color"
-	"strings"
-	"time"
-	"sync"
-	"os"
-	"io"
-	"net/http"
 	"github.com/vanderbilt-design-studio/studio-statistics"
-	"bytes"
+	"image/color"
+	"io"
 	"io/ioutil"
+	"net/http"
+	"os"
+	"os/signal"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
 )
 
 var sigstate atomic.Value
@@ -115,7 +115,7 @@ const logFilename = "activity.log"
 
 var logMutex sync.Mutex
 
-func spawnLogAndPost() (chan SignState) {
+func spawnLogAndPost() chan SignState {
 	const logAndPostPeriod = time.Duration(5 * time.Second)
 	c := make(chan SignState)
 	go func(stateChannel chan SignState) {
@@ -216,7 +216,7 @@ func (s *SignState) Post() {
 	}
 }
 
-func (s *SignState) Log(w io.Writer) (error) {
+func (s *SignState) Log(w io.Writer) error {
 	csvLine := fmt.Sprintf("%v,%v,%v,%v\n", time.Now().Format(time.RFC822), s.Open, s.SwitchValue, s.Motion)
 	if _, err := w.Write([]byte(csvLine)); err != nil {
 		return err
