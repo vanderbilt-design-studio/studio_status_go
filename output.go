@@ -2,28 +2,30 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/sameer/fsm/moore"
 	"github.com/sameer/openvg"
-	"github.com/vanderbilt-design-studio/studio-statistics"
-	"image/color"
-	"net/http"
-	"os"
-	"strings"
-	"time"
-	"io"
-	"sync"
-	"io/ioutil"
-	"bytes"
 	"sync/atomic"
 	"os/signal"
+	"image/color"
+	"strings"
+	"time"
+	"sync"
+	"os"
+	"io"
+	"net/http"
+	"github.com/vanderbilt-design-studio/studio-statistics"
+	"bytes"
+	"io/ioutil"
 )
+
 var sigstate atomic.Value
 
 func spawnSignalBroadcaster() {
 	sigchan := make(chan os.Signal, 2)
 	signal.Notify(sigchan, os.Interrupt, os.Kill)
 	go func() {
-		v := <- sigchan
+		v := <-sigchan
 		sigstate.Store(v.String())
 	}()
 }
@@ -58,14 +60,19 @@ const (
 	subtitleSize     = 100
 	timeSize         = 100
 	mentorOnDutyStrf = "Mentor%v on Duty: "
+	mentorPrefixStrf = "Mentor%v: "
 )
 
-func makeMentorOnDutyStr(subtitle string) string {
+func makeMentorOnDutyStr(subtitle string, onDutyText bool) string {
 	multi := ""
 	if strings.ContainsRune(subtitle, '&') {
 		multi = "s"
 	}
-	return fmt.Sprintf(mentorOnDutyStrf, multi)
+	if onDutyText {
+		return fmt.Sprintf(mentorOnDutyStrf, multi)
+	} else {
+		return fmt.Sprintf(mentorPrefixStrf, multi)
+	}
 }
 
 func (s *SignState) drawDesignStudio() {
@@ -93,7 +100,7 @@ func (s *SignState) drawMentorOnDuty() {
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		// White text
 		openvg.FillRGB(openvg.UnwrapRGBA(white))
-		openvg.Text(0, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), makeMentorOnDutyStr(s.Subtitle), defaultFont, subtitleSize)
+		openvg.Text(0, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), makeMentorOnDutyStr(s.Subtitle, true), defaultFont, subtitleSize)
 		openvg.Text(0, openvg.TextDepth(defaultFont, subtitleSize), s.Subtitle, defaultFont, subtitleSize)
 	}
 }
@@ -186,7 +193,7 @@ func (s *SignState) Post() {
 
 	// TODO: grab mentor on duty
 	if s.Subtitle != "" {
-		s.Subtitle = makeMentorOnDutyStr(s.Subtitle) + s.Subtitle
+		s.Subtitle = makeMentorOnDutyStr(s.Subtitle, false) + s.Subtitle
 	}
 	payload := strings.NewReader(fmt.Sprintf(`{"bgColor": "rgb(%v,%v,%v)", "title": "%v", "subtitle": "%v"}`,
 		s.BackgroundFill.R, s.BackgroundFill.G, s.BackgroundFill.B,
