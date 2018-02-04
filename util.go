@@ -12,6 +12,7 @@ var AcquireArduinoUID = func() func(byte) *serial.Port {
 		mtx.Lock()
 		defer mtx.Unlock()
 		for i := range []int{0, 1, 2} {
+			fmt.Println("Try acquire ", i)
 			serialConf := &serial.Config{Name: fmt.Sprint("/dev/ttyACM", i), Baud: 9600}
 			serialPort, err := serial.OpenPort(serialConf) // Try to open a serial port.
 			if err == nil {
@@ -22,7 +23,7 @@ var AcquireArduinoUID = func() func(byte) *serial.Port {
 					return serialPort
 				}
 				serialPort.Close()
-				fmt.Println("Wrong port for", uid)
+				fmt.Println("Wrong port for", uid, "found", buf[0])
 			} else {
 				fmt.Println("Failed to acquire serial port:", uid, err)
 			}

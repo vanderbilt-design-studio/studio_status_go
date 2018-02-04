@@ -37,6 +37,7 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		s.Motion = false
 		s.Title = "Closed"
 		s.Subtitle = ""
+		spawnSignalBroadcaster()
 		s.LogAndPostChan = spawnLogAndPost()
 		spawnStatsPoster()
 		s.relayArduino = AcquireArduinoUID(32)
