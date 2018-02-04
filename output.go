@@ -4,12 +4,29 @@ import (
 	"fmt"
 	"github.com/sameer/fsm/moore"
 	"github.com/sameer/openvg"
+	"github.com/vanderbilt-design-studio/studio-statistics"
 	"image/color"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+	"io"
+	"sync"
+	"io/ioutil"
+	"bytes"
+	"sync/atomic"
+	"os/signal"
 )
+var sigstate atomic.Value
+
+func spawnSignalBroadcaster() {
+	sigchan := make(chan os.Signal, 2)
+	signal.Notify(sigchan, os.Interrupt, os.Kill)
+	go func() {
+		v := <- sigchan
+		sigstate.Store(v.String())
+	}()
+}
 
 const defaultFont = "helvetica" // Helvetica font is beautiful for long distance reading.
 
@@ -89,15 +106,76 @@ func (s *SignState) drawTime() {
 const postUrl = "https://ds-sign.yunyul.in"
 const logFilename = "activity.log"
 
-func (s *SignState) Notify() {
-	select {
-	case <-s.NotifyTicker.C: // If it is time to do a post!
-		s.Post()
-		s.Log()
-	default:
-		return
-	}
+var logMutex sync.Mutex
 
+func spawnLogAndPost() (chan SignState) {
+	const logAndPostPeriod = time.Duration(5 * time.Second)
+	c := make(chan SignState)
+	go func(stateChannel chan SignState) {
+		tick := time.NewTicker(logAndPostPeriod)
+		logFile, err := os.OpenFile(logFilename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+		shouldLog := true
+		if err != nil {
+			fmt.Println(err)
+			shouldLog = false
+		} else {
+			defer logFile.Close()
+		}
+		for sigstate.Load() == "" {
+			state := <-stateChannel
+			select {
+			case <-tick.C:
+				state.Post()
+				if shouldLog {
+					logMutex.Lock()
+					state.Log(logFile)
+					logMutex.Unlock()
+				}
+			default:
+				continue
+			}
+		}
+
+	}(c)
+	return c
+}
+
+func spawnStatsPoster() {
+	const statsPostPeriod = time.Duration(1 * time.Minute)
+	go func() {
+		tick := time.NewTicker(statsPostPeriod)
+		for sigstate.Load() == "" {
+			select {
+			case <-tick.C:
+				x_api_key := os.Getenv("x_api_key")
+				if x_api_key == "" {
+					continue
+				}
+				logMutex.Lock()
+				content, err := ioutil.ReadFile(logFilename)
+				logMutex.Unlock()
+				if err != nil {
+					continue
+				}
+				pr, pw := io.Pipe()
+				req, err := http.NewRequest("POST", "https://spuri.io/studio-statistics.png", pr)
+				if err != nil {
+					fmt.Println("Failed to prepare post request:", err)
+					pr.Close()
+					pw.Close()
+					continue
+				}
+				req.Header.Add("content-type", "image/png")
+				req.Header.Add("x-api-key", x_api_key)
+				go func() {
+					_, err = http.DefaultClient.Do(req)
+					pr.Close()
+				}()
+				studio_statistics.MakeGraph(bytes.NewReader(content), pw)
+				pw.Close()
+			}
+		}
+	}()
 }
 
 func (s *SignState) Post() {
@@ -118,7 +196,8 @@ func (s *SignState) Post() {
 
 	req, err := http.NewRequest("POST", postUrl, payload)
 	if err != nil {
-		fmt.Printf("Failed to prepare post request: %v\n", err)
+		fmt.Println("Failed to prepare post request:", err)
+		return
 	}
 
 	req.Header.Add("content-type", "application/json")
@@ -126,23 +205,16 @@ func (s *SignState) Post() {
 
 	_, err = http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Printf("Failed to post data: %v\n", err)
+		fmt.Println("Failed to post data:", err)
 	}
 }
 
-func (s *SignState) Log() {
-	stateCopy := *s
-	go func() {
-		logFile, err := os.OpenFile(logFilename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-		if err != nil {
-			panic(err)
-		}
-		defer logFile.Close()
-		csvLine := fmt.Sprintf("%v,%v,%v,%v\n", time.Now().Format(time.RFC822), stateCopy.Open, stateCopy.SwitchValue, stateCopy.Motion)
-		if _, err = logFile.WriteString(csvLine); err != nil {
-			panic(err)
-		}
-	}()
+func (s *SignState) Log(w io.Writer) (error) {
+	csvLine := fmt.Sprintf("%v,%v,%v,%v\n", time.Now().Format(time.RFC822), s.Open, s.SwitchValue, s.Motion)
+	if _, err := w.Write([]byte(csvLine)); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *SignState) DoRelay() {
@@ -160,6 +232,6 @@ var outputFunction moore.OutputFunction = func(state moore.State) {
 	openvg.Start(s.Width, s.Height) // Allow draw commands
 	s.draw()                        // Do draw commands
 	openvg.End()                    // Disallow them
-	s.Notify()
+	s.LogAndPostChan <- *s
 	s.DoRelay()
 }

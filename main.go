@@ -9,7 +9,6 @@ import (
 )
 
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert TPS to useful number
-const notifyPeriod = time.Duration(5 * time.Second)
 
 type SignState struct {
 	Init           bool
@@ -20,8 +19,9 @@ type SignState struct {
 	Motion         bool
 	Title          string
 	Subtitle       string
-	NotifyTicker   *time.Ticker
-	relayArduino   *serial.Port
+	LogAndPostChan chan SignState
+
+	relayArduino *serial.Port
 }
 
 var transitionFunction moore.TransitionFunction = func(state moore.State, input moore.Input) (moore.State, error) {
@@ -37,7 +37,8 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		s.Motion = false
 		s.Title = "Closed"
 		s.Subtitle = ""
-		s.NotifyTicker = time.NewTicker(notifyPeriod)
+		s.LogAndPostChan = spawnLogAndPost()
+		spawnStatsPoster()
 		s.relayArduino = AcquireArduinoUID(32)
 
 		s.Init = true // Mark as succeeded
