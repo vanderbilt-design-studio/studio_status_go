@@ -111,13 +111,6 @@ func (si *SignInput) IsDoorOpen() bool {
 		return true
 	}
 	return buf[0] != 0 // 0 == false aka door closed
-	// Add onto the average
-	//doorMovingAverage.Add(float64(val))
-	//return doorMovingAverage.Avg() > 200 // The door sees light on average
-	// TODO: change this so a sudden 30% difference in the moving average will cause a state transition
-	// TODO: remove the magic value of 200 because sometimes the sensor changes irreversably because people
-	// mess with the arduino. Instead, we can make an assumption that no one will be in the room at 5/6AM and
-	// use the sensor values at those times as "darkness".
 }
 
 func (si *SignInput) IsThereMotion() bool {

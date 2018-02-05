@@ -2,29 +2,20 @@ package main
 
 import "time"
 
-type mentor_shift struct {
+type mentorShift struct {
 	hour     int
 	weekday  time.Weekday
 	duration time.Duration
 	name     string
 }
 
-type mentor_shifts []mentor_shift
+type mentorShifts []mentorShift
 
-func MustParse(layout, value string) time.Time {
-	if t, err := time.Parse(layout, value+" CST"); err != nil {
-		panic(err)
-	} else {
-		return t
-	}
-}
-
-const mentorTimeLayout = "3:04PM MST"
 const mentorDefaultShiftDuration = time.Duration(time.Hour * 2)
 
 // Mentor names array. Each row is a day of the week (sun, mon, ..., sat). Each element in a
 // row is a mentor timeslot starting at 12PM, where each slot is 2 hours long.
-var shifts = mentor_shifts{
+var shifts = mentorShifts{
 	{14, time.Sunday, mentorDefaultShiftDuration, "Iliya L"},
 	{16, time.Sunday, mentorDefaultShiftDuration, "Nick B"},
 	{18, time.Sunday, mentorDefaultShiftDuration, "Foard N"},
@@ -53,10 +44,10 @@ var shifts = mentor_shifts{
 	{17, time.Thursday, mentorDefaultShiftDuration, "Jesse L"},
 }
 
-func (this mentor_shifts) getMentorsOnDuty() (mentorsOnDuty []mentor_shift) {
+func (this mentorShifts) getMentorsOnDuty() (mentorsOnDuty []mentorShift) {
 	now := time.Now()
 	y, m, d := now.Date()
-	mentorsOnDuty = make([]mentor_shift, 0, 2)
+	mentorsOnDuty = make([]mentorShift, 0, 2)
 	for _, shift := range this {
 		shiftStart := time.Date(y, m, d, shift.hour, 0, 0, 0, time.Local)
 		if shift.weekday == now.Weekday() && shiftStart.Before(now) && shiftStart.Add(shift.duration).After(now) {

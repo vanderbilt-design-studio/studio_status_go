@@ -5,9 +5,7 @@ import (
 
 	"bytes"
 	"github.com/sameer/fsm/moore"
-	"github.com/sameer/openvg"
 	"github.com/vanderbilt-design-studio/studio-statistics"
-	"image/color"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -24,90 +22,11 @@ var sigstate atomic.Value
 func spawnSignalBroadcaster() {
 	sigchan := make(chan os.Signal, 2)
 	signal.Notify(sigchan, os.Interrupt, os.Kill)
+	sigstate.Store("")
 	go func() {
 		v := <-sigchan
 		sigstate.Store(v.String())
 	}()
-}
-
-const defaultFont = "helvetica" // Helvetica font is beautiful for long distance reading.
-
-var (
-	// A bunch of standard colors from the official guidelines (somewhere) for road signs
-	// to ensure AAA accessiblity. (i.e. red is not pure red so protanomaly colorblind see it)
-	blue   = color.RGBA{0, 67, 123, 255}
-	green  = color.RGBA{0, 95, 77, 255}
-	purple = color.RGBA{157, 0, 113, 255}
-	black  = color.RGBA{0, 0, 0, 255}
-	brown  = color.RGBA{98, 51, 30, 255}
-	red    = color.RGBA{199, 0, 43, 255}
-	orange = color.RGBA{255, 104, 2, 255}
-	yellow = color.RGBA{255, 178, 0, 255}
-	white  = color.RGBA{255, 255, 255, 255}
-)
-
-func (s *SignState) draw() {
-	openvg.Background(openvg.UnwrapRGB(s.BackgroundFill)) // Fill BG vals
-	s.drawDesignStudio()                                  // Draw the words "Design Studio"
-	s.drawOpen(s.Open)                                    // Handles whether the studio is open
-	s.drawMentorOnDuty()                                  // Mentor name if there is one on duty
-	s.drawTime()
-}
-
-const (
-	studioSize       = 200
-	titleSize        = 400
-	subtitleSize     = 100
-	timeSize         = 100
-	mentorOnDutyStrf = "Mentor%v on Duty: "
-	mentorPrefixStrf = "Mentor%v: "
-)
-
-func makeMentorOnDutyStr(subtitle string, onDutyText bool) string {
-	multi := ""
-	if strings.ContainsRune(subtitle, '&') {
-		multi = "s"
-	}
-	if onDutyText {
-		return fmt.Sprintf(mentorOnDutyStrf, multi)
-	} else {
-		return fmt.Sprintf(mentorPrefixStrf, multi)
-	}
-}
-
-func (s *SignState) drawDesignStudio() {
-	// Set the drawing color to be white
-	openvg.FillRGB(openvg.UnwrapRGBA(white))
-	// Draw text at a size of 200 in Helvetica Bold
-	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, studioSize)+openvg.TextDepth(defaultFont, studioSize), "Design Studio", defaultFont, studioSize)
-}
-
-func (s *SignState) drawOpen(open bool) {
-	// White "Closed" on red background.
-	fill := white
-	s.BackgroundFill = red
-	// White "Open" on green background.
-	if open {
-		s.BackgroundFill = green
-	}
-	// Draw that, centered and big.
-	openvg.FillRGB(openvg.UnwrapRGBA(fill))
-	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, studioSize)-openvg.TextDepth(defaultFont, studioSize)-openvg.TextDepth(defaultFont, titleSize)-openvg.TextHeight(defaultFont, titleSize)/2, s.Title, defaultFont, titleSize)
-}
-
-func (s *SignState) drawMentorOnDuty() {
-	// Open + normal operation.
-	if s.Open && s.SwitchValue == stateOpenNormal {
-		// White text
-		openvg.FillRGB(openvg.UnwrapRGBA(white))
-		openvg.Text(0, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), makeMentorOnDutyStr(s.Subtitle, true), defaultFont, subtitleSize)
-		openvg.Text(0, openvg.TextDepth(defaultFont, subtitleSize), s.Subtitle, defaultFont, subtitleSize)
-	}
-}
-
-func (s *SignState) drawTime() {
-	now := time.Now()
-	openvg.TextEnd(1920, openvg.TextHeight(defaultFont, timeSize)+openvg.TextDepth(defaultFont, timeSize), now.Format(time.Kitchen), defaultFont, timeSize)
 }
 
 const postUrl = "https://ds-sign.yunyul.in"
@@ -165,7 +84,7 @@ func spawnStatsPoster() {
 					continue
 				}
 				pr, pw := io.Pipe()
-				req, err := http.NewRequest("POST", "https://spuri.io/studio-statistics.png", pr)
+				req, err := http.NewRequest("POST", "http://spuri.io/studio-statistics.png", pr)
 				if err != nil {
 					fmt.Println("Failed to prepare post request:", err)
 					pr.Close()
@@ -178,7 +97,9 @@ func spawnStatsPoster() {
 					_, err = http.DefaultClient.Do(req)
 					pr.Close()
 				}()
-				studio_statistics.MakeGraph(bytes.NewReader(content), pw)
+				if err := studio_statistics.MakeGraph(bytes.NewReader(content), pw); err != nil {
+					fmt.Println("Errored in trying to make graph", err)
+				}
 				pw.Close()
 			}
 		}
@@ -217,7 +138,7 @@ func (s *SignState) Post() {
 }
 
 func (s *SignState) Log(w io.Writer) error {
-	csvLine := fmt.Sprintf("%v,%v,%v,%v\n", time.Now().Format(time.RFC822), s.Open, s.SwitchValue, s.Motion)
+	csvLine := fmt.Sprintf("%v,%v,%v,%v\n", time.Now().Format(time.RFC3339Nano), s.Open, s.SwitchValue, s.Motion)
 	if _, err := w.Write([]byte(csvLine)); err != nil {
 		return err
 	}
@@ -236,9 +157,7 @@ func (s *SignState) DoRelay() {
 
 var outputFunction moore.OutputFunction = func(state moore.State) {
 	s := state.(*SignState)
-	openvg.Start(s.Width, s.Height) // Allow draw commands
-	s.draw()                        // Do draw commands
-	openvg.End()                    // Disallow them
+	s.draw() // Do draw commands
 	s.LogAndPostChan <- *s
 	s.DoRelay()
 }

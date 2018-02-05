@@ -2,13 +2,14 @@ package main
 
 import (
 	"github.com/sameer/fsm/moore"
-	"github.com/sameer/openvg"
 	"github.com/tarm/serial"
 	"image/color"
 	"time"
+	"fmt"
+	"github.com/sameer/openvg"
 )
 
-const tick = time.Duration(1000 / 30 * time.Millisecond) // convert TPS to useful number
+const tick = time.Duration(1000 / 30 * time.Millisecond) // convert ticks per second to useful number
 
 type SignState struct {
 	Init           bool
@@ -37,6 +38,7 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		s.Motion = false
 		s.Title = "Closed"
 		s.Subtitle = ""
+		spawnSignalBroadcaster()
 		s.LogAndPostChan = spawnLogAndPost()
 		spawnStatsPoster()
 		s.relayArduino = AcquireArduinoUID(32)
@@ -70,10 +72,16 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		s.Subtitle = ""
 	}
 
+	if sigstate.Load() != "" {
+		s = nil
+	}
+
 	if s == nil { // This is the quit state. Cleanup after ourselves.
 		openvg.Finish()
+		return nil, nil
+	} else {
+		return s, err
 	}
-	return s, err
 }
 
 func main() {
