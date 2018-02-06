@@ -21,7 +21,7 @@ var sigstate atomic.Value
 
 func spawnSignalBroadcaster() {
 	sigchan := make(chan os.Signal, 2)
-	signal.Notify(sigchan, os.Kill)
+	signal.Notify(sigchan, os.Kill, os.Interrupt)
 	sigstate.Store("")
 	go func() {
 		v := <-sigchan
@@ -84,23 +84,20 @@ func spawnStatsPoster() {
 					fmt.Println("Error in accessing file:", err)
 					continue
 				}
-				pr, pw := io.Pipe()
-				req, err := http.NewRequest("POST", "http://spuri.io/studio-statistics.png", pr)
+				var buf bytes.Buffer
+				req, err := http.NewRequest("POST", "http://spuri.io/studio-statistics.png", &buf)
 				if err != nil {
 					fmt.Println("Failed to prepare post request:", err)
-					pr.Close()
-					pw.Close()
 					continue
 				}
 				req.Header.Add("content-type", "image/png")
 				req.Header.Add("x-api-key", x_api_key)
-				go func() {
-					_, err = http.DefaultClient.Do(req)
-					// pr.Close()
-				}()
 				fmt.Println("Making graph")
-				if err := studio_statistics.MakeGraph(bytes.NewReader(content), pw); err != nil {
-					fmt.Println("Errored in trying to make graph", err)
+				if err := studio_statistics.MakeGraph(bytes.NewReader(content), &buf); err != nil {
+					fmt.Println("Error in trying to make graph", err)
+				}
+				if _, err := http.DefaultClient.Do(req); err != nil {
+					fmt.Println("Error in trying to post data", err)
 				}
 				fmt.Println("Stats posted!")
 			default:
