@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/sameer/fsm/moore"
 	"github.com/sameer/openvg"
 	"github.com/tarm/serial"
