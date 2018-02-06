@@ -21,7 +21,7 @@ var sigstate atomic.Value
 
 func spawnSignalBroadcaster() {
 	sigchan := make(chan os.Signal, 2)
-	signal.Notify(sigchan, os.Interrupt, os.Kill)
+	signal.Notify(sigchan, os.Kill)
 	sigstate.Store("")
 	go func() {
 		v := <-sigchan
@@ -47,7 +47,7 @@ func spawnLogAndPost() chan SignState {
 		} else {
 			defer logFile.Close()
 		}
-		for sigstate.Load() == "" {
+		for sigstate.Load() == "" || sigstate.Load() == nil {
 			state := <-stateChannel
 			select {
 			case <-tick.C:
@@ -69,17 +69,19 @@ func spawnStatsPoster() {
 	const statsPostPeriod = time.Duration(1 * time.Minute)
 	go func() {
 		tick := time.NewTicker(statsPostPeriod)
-		for sigstate.Load() == "" {
+		for sigstate.Load() == "" || sigstate.Load() == nil {
 			select {
 			case <-tick.C:
+				fmt.Println("Beginning post...")
 				x_api_key := os.Getenv("x_api_key")
 				if x_api_key == "" {
+					fmt.Println("No api key, continuing")
 					continue
 				}
-				logMutex.Lock()
+				fmt.Println("Reading file")
 				content, err := ioutil.ReadFile(logFilename)
-				logMutex.Unlock()
 				if err != nil {
+					fmt.Println("Error in accessing file:", err)
 					continue
 				}
 				pr, pw := io.Pipe()
@@ -94,14 +96,18 @@ func spawnStatsPoster() {
 				req.Header.Add("x-api-key", x_api_key)
 				go func() {
 					_, err = http.DefaultClient.Do(req)
-					pr.Close()
+					// pr.Close()
 				}()
+				fmt.Println("Making graph")
 				if err := studio_statistics.MakeGraph(bytes.NewReader(content), pw); err != nil {
 					fmt.Println("Errored in trying to make graph", err)
 				}
-				pw.Close()
+				fmt.Println("Stats posted!")
+			default:
+				continue
 			}
 		}
+		fmt.Println("Done posting, got", sigstate.Load())
 	}()
 }
 
@@ -155,6 +161,9 @@ func (s *SignState) DoRelay() {
 }
 
 var outputFunction moore.OutputFunction = func(state moore.State) {
+	if state == nil {
+		return
+	}
 	s := state.(*SignState)
 	s.draw() // Do draw commands
 	s.LogAndPostChan <- *s
