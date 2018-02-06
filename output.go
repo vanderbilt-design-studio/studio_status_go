@@ -61,7 +61,6 @@ func spawnLogAndPost() chan SignState {
 				continue
 			}
 		}
-
 	}(c)
 	return c
 }

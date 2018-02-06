@@ -34,6 +34,16 @@ func (si *SignInput) init() {
 	si.doorArduino = AcquireArduinoUID(16)
 }
 
+func (si *SignInput) finish() {
+	if si.isGPIOAvailable {
+		hwio.CloseAll()
+	}
+	if si.doorArduino != nil {
+		si.doorArduino.Flush()
+		si.doorArduino.Close()
+	}
+}
+
 type SwitchState int
 
 const (
@@ -126,11 +136,13 @@ func (si *SignInput) IsThereMotion() bool {
 	return buf[0] != 0
 }
 
+var inputState *SignInput
+
 var inputFunction = func() moore.InputFunction {
-	input := &SignInput{}
-	input.isGPIOAvailable = true
-	input.init()
+	inputState = &SignInput{}
+	inputState.isGPIOAvailable = true
+	inputState.init()
 	return func() moore.Input {
-		return input
+		return inputState
 	}
 }()

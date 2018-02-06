@@ -77,7 +77,12 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 	}
 
 	if s == nil { // This is the quit state. Cleanup after ourselves.
+		inputState.finish()
 		openvg.Finish()
+		if s.relayArduino != nil {
+			s.relayArduino.Flush()
+			s.relayArduino.Close()
+		}
 		return nil, nil
 	} else {
 		return s, err
