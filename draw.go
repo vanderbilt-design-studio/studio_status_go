@@ -1,10 +1,10 @@
 package main
 
 import (
-	"image/color"
-	"strings"
 	"fmt"
 	"github.com/sameer/openvg"
+	"image/color"
+	"strings"
 	"time"
 )
 
@@ -55,7 +55,6 @@ func makeMentorOnDutyStr(subtitle string, onDutyText bool) string {
 	}
 }
 
-
 func (s *SignState) drawDesignStudio() {
 	// Set the drawing color to be white
 	openvg.FillRGB(openvg.UnwrapRGBA(white))
@@ -90,5 +89,3 @@ func (s *SignState) drawTime() {
 	now := time.Now()
 	openvg.TextEnd(1920, openvg.TextHeight(defaultFont, timeSize)+openvg.TextDepth(defaultFont, timeSize), now.Format(time.Kitchen), defaultFont, timeSize)
 }
-
-

@@ -1,12 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"github.com/sameer/fsm/moore"
+	"github.com/sameer/openvg"
 	"github.com/tarm/serial"
 	"image/color"
 	"time"
-	"fmt"
-	"github.com/sameer/openvg"
 )
 
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert ticks per second to useful number
