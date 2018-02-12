@@ -5,17 +5,13 @@ import (
 	"github.com/tarm/serial"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
-	"time"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"time"
 )
 
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert ticks per second to useful number
-
-const width, height = 1920, 1080
-
-const font = "Helvetica-Bold.ttf"
 
 type SignState struct {
 	Init           bool
@@ -33,49 +29,55 @@ type SignState struct {
 	relayArduino *serial.Port
 }
 
+func initState(s *SignState) (*SignState, error) {
+	// Init to default state
+	if err := sdl.Init(sdl.INIT_VIDEO); err != nil {
+		return nil, err
+	}
+	if window, err := sdl.CreateWindow("", 0, 0, width, height, sdl.WINDOW_FULLSCREEN|sdl.WINDOW_SHOWN); err != nil {
+		return nil, err
+	} else if surf, err := window.GetSurface(); err == nil {
+		s.Window, s.Surface = window, surf
+	} else {
+		return nil, err
+	}
+	if err := ttf.Init(); err != nil {
+		return nil, err
+	} else {
+		s.Fonts = make(map[int]*ttf.Font)
+		for _, size := range desiredFontSizes {
+			if font, err := ttf.OpenFont(font, size); err != nil {
+				return nil, err
+			} else {
+				font.SetStyle(ttf.STYLE_BOLD)
+				font.SetHinting(ttf.HINTING_MONO)
+				s.Fonts[size] = font
+			}
+		}
+	}
+
+	s.BackgroundFill = white
+	s.Open = false
+	s.SwitchValue = stateClosedForced
+	s.Motion = false
+	s.Title = "Closed"
+	s.Subtitle = ""
+	spawnSignalBroadcaster()
+	s.LogAndPostChan = spawnLogAndPost()
+	spawnStatsPoster()
+	s.relayArduino = AcquireArduinoUID(32)
+
+	s.Init = true // Mark as succeeded
+	return s, nil
+}
+
 var transitionFunction moore.TransitionFunction = func(state moore.State, input moore.Input) (moore.State, error) {
-	var err error = nil
 	s := state.(*SignState)
 	i := input.(*SignInput)
 	if !s.Init {
-		// Init to default state
-		if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
+		if _, err := initState(s); err != nil {
 			return nil, err
 		}
-		if window, err := sdl.CreateWindow("", 0, 0, width, height, sdl.WINDOW_FULLSCREEN|sdl.WINDOW_SHOWN); err != nil {
-			return nil, err
-		} else if surf, err := window.GetSurface(); err == nil {
-			s.Window, s.Surface = window, surf
-		} else {
-			return err, nil
-		}
-		if err := ttf.Init(); err != nil {
-			return nil, err
-		} else {
-			s.Fonts = make(map[int]*ttf.Font)
-			for _, size := range desiredFontSizes {
-				if font, err := ttf.OpenFont(font, size); err != nil {
-					return nil, err
-				} else {
-					font.SetStyle(ttf.STYLE_BOLD)
-					font.SetHinting(ttf.HINTING_MONO)
-					s.Fonts[size] = font
-				}
-			}
-		}
-
-		s.BackgroundFill = white
-		s.Open = false
-		s.SwitchValue = stateClosedForced
-		s.Motion = false
-		s.Title = "Closed"
-		s.Subtitle = ""
-		spawnSignalBroadcaster()
-		s.LogAndPostChan = spawnLogAndPost()
-		spawnStatsPoster()
-		s.relayArduino = AcquireArduinoUID(32)
-
-		s.Init = true // Mark as succeeded
 	}
 
 	// Put inputs into state struct
@@ -122,7 +124,7 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		sdl.Quit()
 		return nil, nil
 	} else {
-		return s, err
+		return s, nil
 	}
 }
 

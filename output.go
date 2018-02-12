@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"bytes"
+	"fmt"
 	"github.com/sameer/fsm/moore"
 	"github.com/vanderbilt-design-studio/studio-statistics"
 	"io"

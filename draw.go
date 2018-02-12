@@ -7,7 +7,8 @@ import (
 	"time"
 )
 
-const defaultFont = "helvetica" // Helvetica font is beautiful for long distance reading.
+const font = "Helvetica-Bold.ttf" // Helvetica font is beautiful for long distance reading.
+const width, height = 1920, 1080
 
 var (
 	// A bunch of standard colors from the official guidelines (somewhere) for road signs
@@ -33,7 +34,8 @@ func (s *SignState) draw() {
 	s.Window.UpdateSurface()
 }
 
-var desiredFontSizes = []int {120, 250, 580}
+var desiredFontSizes = []int{120, 250, 580}
+
 const (
 	studioSize       = 250
 	titleSize        = 580
@@ -61,18 +63,44 @@ func (s *SignState) blitDesignStudio() {
 	s.blitGeneric(studioSize, str, white, width/2, int32(s.Fonts[studioSize].Height()/2))
 }
 
+var cachedBlits = make(map[int]map[string]*sdl.Surface)
+
 func (s *SignState) blitGeneric(size int, text string, color sdl.Color, x, y int32) {
-	surf, err := s.Fonts[size].RenderUTF8Blended(text, color)
-	if err == nil {
+	if _, ok := cachedBlits[size]; !ok {
+		cachedBlits[size] = make(map[string]*sdl.Surface)
+	}
+	surf, ok := cachedBlits[size][text]
+	if !ok {
+		var err error
+		surf, err = s.Fonts[size].RenderUTF8Blended(text, color)
+		if err != nil {
+			fmt.Println(err)
+			if surf != nil {
+				surf.Free()
+			}
+			surf = nil
+		}
+		var optimizedSurf *sdl.Surface
+		optimizedSurf, err = surf.Convert(s.Surface.Format, 0)
+		if err != nil {
+			fmt.Println(err)
+			if optimizedSurf != nil {
+				optimizedSurf.Free()
+			}
+			surf.Free()
+			cachedBlits[size][text] = optimizedSurf
+		} else {
+			cachedBlits[size][text] = surf
+		}
+	}
+
+	if surf != nil {
 		sw, sh, err := s.Fonts[size].SizeUTF8(text)
-		if err == nil {
+		if err != nil {
+			fmt.Println(err)
+		} else {
 			surf.Blit(nil, s.Surface, &sdl.Rect{x - int32(sw)/2, y - int32(sh)/2, 0, 0})
 		}
-	} else {
-		fmt.Println(err)
-	}
-	if surf != nil {
-		surf.Free()
 	}
 }
 
@@ -91,7 +119,7 @@ func (s *SignState) blitMentorOnDuty() {
 	// Open + normal operation.
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		// White text
-		s.blitGeneric(subtitleSize, makeMentorOnDutyStr(s.Subtitle, true), white, width*1/8, int32(height*7/8 - s.Fonts[subtitleSize].Height()))
+		s.blitGeneric(subtitleSize, makeMentorOnDutyStr(s.Subtitle, true), white, width*1/8, int32(height*7/8-s.Fonts[subtitleSize].Height()))
 		s.blitGeneric(subtitleSize, s.Subtitle, white, width*1/8, height*7/8)
 	}
 }
