@@ -8,6 +8,7 @@ import (
 	"time"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
 )
 
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert ticks per second to useful number
@@ -133,8 +134,10 @@ func main() {
 		inputFunction,
 		outputFunction,
 	)
-	go func() {
-		http.ListenAndServe("localhost:6060", nil)
-	}()
+	if os.Getenv("DEV") != "" {
+		go func() {
+			http.ListenAndServe("localhost:6060", nil)
+		}()
+	}
 	mm.Run(time.NewTicker(tick))
 }
