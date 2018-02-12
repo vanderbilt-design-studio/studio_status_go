@@ -60,12 +60,21 @@ func makeMentorOnDutyStr(subtitle string, onDutyText bool) string {
 func (s *SignState) blitDesignStudio() {
 	// Set the drawing color to be white
 	str := "Design Studio"
-	s.blitGeneric(studioSize, str, white, width/2, int32(s.Fonts[studioSize].Height()/2))
+	s.blitCentered(studioSize, str, white, width/2, int32(s.Fonts[studioSize].Height()/2))
 }
 
 var cachedBlits = make(map[int]map[string]*sdl.Surface)
 
-func (s *SignState) blitGeneric(size int, text string, color sdl.Color, x, y int32) {
+func (s *SignState) blitCentered(size int, text string, color sdl.Color, x, y int32) {
+	sw, sh, err := s.Fonts[size].SizeUTF8(text)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		s.blitLeft(size, text, color, x-int32(sw)/2, y-int32(sh)/2)
+	}
+}
+
+func (s *SignState) blitLeft(size int, text string, color sdl.Color, x, y int32) {
 	if _, ok := cachedBlits[size]; !ok {
 		cachedBlits[size] = make(map[string]*sdl.Surface)
 	}
@@ -95,12 +104,7 @@ func (s *SignState) blitGeneric(size int, text string, color sdl.Color, x, y int
 	}
 
 	if surf != nil {
-		sw, sh, err := s.Fonts[size].SizeUTF8(text)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			surf.Blit(nil, s.Surface, &sdl.Rect{x - int32(sw)/2, y - int32(sh)/2, 0, 0})
-		}
+		surf.Blit(nil, s.Surface, &sdl.Rect{x, y, 0, 0})
 	}
 }
 
@@ -112,19 +116,19 @@ func (s *SignState) blitWhetherOpen(open bool) {
 		s.BackgroundFill = green
 	}
 	// Draw that, centered and big.
-	s.blitGeneric(titleSize, s.Title, white, width/2, height/2)
+	s.blitCentered(titleSize, s.Title, white, width/2, height*7/16)
 }
 
 func (s *SignState) blitMentorOnDuty() {
 	// Open + normal operation.
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		// White text
-		s.blitGeneric(subtitleSize, makeMentorOnDutyStr(s.Subtitle, true), white, width*1/8, int32(height*7/8-s.Fonts[subtitleSize].Height()))
-		s.blitGeneric(subtitleSize, s.Subtitle, white, width*1/8, height*7/8)
+		s.blitLeft(subtitleSize, makeMentorOnDutyStr(s.Subtitle, true), white, width*1/64, int32(height-s.Fonts[subtitleSize].Height()*2))
+		s.blitLeft(subtitleSize, s.Subtitle, white, width*1/64, int32(height-s.Fonts[subtitleSize].Height()))
 	}
 }
 
 func (s *SignState) blitTime() {
 	now := time.Now()
-	s.blitGeneric(timeSize, now.Format(time.Kitchen), white, width*7/8, height*7/8)
+	s.blitCentered(timeSize, now.Format(time.Kitchen), white, width*13/16, height*15/16)
 }
