@@ -25,7 +25,6 @@ var shifts = mentorShifts{
 	{20, time.Monday, mentorDefaultShiftDuration, "Kurt L"},
 	{14, time.Tuesday, mentorDefaultShiftDuration, "Sophia Z"},
 	{16, time.Tuesday, mentorDefaultShiftDuration, "Emily Mk"},
-	{18, time.Tuesday, mentorDefaultShiftDuration, "Jonah H"},
 	{14, time.Wednesday, mentorDefaultShiftDuration, "Eric N"},
 	{16, time.Wednesday, mentorDefaultShiftDuration, "Lauren B"},
 	{18, time.Wednesday, mentorDefaultShiftDuration, "Sameer P"},
