@@ -2,8 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/sameer/openvg"
-	"image/color"
+	"github.com/veandco/go-sdl2/sdl"
 	"strings"
 	"time"
 )
@@ -13,32 +12,33 @@ const defaultFont = "helvetica" // Helvetica font is beautiful for long distance
 var (
 	// A bunch of standard colors from the official guidelines (somewhere) for road signs
 	// to ensure AAA accessiblity. (i.e. red is not pure red so protanomaly colorblind see it)
-	blue   = color.RGBA{0, 67, 123, 255}
-	green  = color.RGBA{0, 95, 77, 255}
-	purple = color.RGBA{157, 0, 113, 255}
-	black  = color.RGBA{0, 0, 0, 255}
-	brown  = color.RGBA{98, 51, 30, 255}
-	red    = color.RGBA{199, 0, 43, 255}
-	orange = color.RGBA{255, 104, 2, 255}
-	yellow = color.RGBA{255, 178, 0, 255}
-	white  = color.RGBA{255, 255, 255, 255}
+	blue   = sdl.Color{0, 67, 123, 255}
+	green  = sdl.Color{0, 95, 77, 255}
+	purple = sdl.Color{157, 0, 113, 255}
+	black  = sdl.Color{0, 0, 0, 255}
+	brown  = sdl.Color{98, 51, 30, 255}
+	red    = sdl.Color{199, 0, 43, 255}
+	orange = sdl.Color{255, 104, 2, 255}
+	yellow = sdl.Color{255, 178, 0, 255}
+	white  = sdl.Color{255, 255, 255, 255}
 )
+var fullscreen = &sdl.Rect{0, 0, width, height}
 
 func (s *SignState) draw() {
-	openvg.Start(s.Width, s.Height)
-	openvg.Background(openvg.UnwrapRGB(s.BackgroundFill)) // Fill BG vals
-	s.drawDesignStudio()                                  // Draw the words "Design Studio"
-	s.drawOpen(s.Open)                                    // Handles whether the studio is open
-	s.drawMentorOnDuty()                                  // Mentor name if there is one on duty
-	s.drawTime()
-	openvg.End()
+	s.Surface.FillRect(fullscreen, colorToUint32(s.BackgroundFill)) // Fill BG vals
+	s.blitDesignStudio()                                            // Draw the words "Design Studio"
+	s.blitWhetherOpen(s.Open)                                       // Handles whether the studio is open
+	s.blitMentorOnDuty()                                            // Mentor name if there is one on duty
+	s.blitTime()
+	s.Window.UpdateSurface()
 }
 
+var desiredFontSizes = []int {120, 250, 580}
 const (
-	studioSize       = 200
-	titleSize        = 400
-	subtitleSize     = 100
-	timeSize         = 100
+	studioSize       = 250
+	titleSize        = 580
+	subtitleSize     = 120
+	timeSize         = 120
 	mentorOnDutyStrf = "Mentor%v on Duty: "
 	mentorPrefixStrf = "Mentor%v: "
 )
@@ -55,37 +55,48 @@ func makeMentorOnDutyStr(subtitle string, onDutyText bool) string {
 	}
 }
 
-func (s *SignState) drawDesignStudio() {
+func (s *SignState) blitDesignStudio() {
 	// Set the drawing color to be white
-	openvg.FillRGB(openvg.UnwrapRGBA(white))
-	// Draw text at a size of 200 in Helvetica Bold
-	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, studioSize)+openvg.TextDepth(defaultFont, studioSize), "Design Studio", defaultFont, studioSize)
+	str := "Design Studio"
+	s.blitGeneric(studioSize, str, white, width/2, int32(s.Fonts[studioSize].Height()/2))
 }
 
-func (s *SignState) drawOpen(open bool) {
+func (s *SignState) blitGeneric(size int, text string, color sdl.Color, x, y int32) {
+	surf, err := s.Fonts[size].RenderUTF8Blended(text, color)
+	if err == nil {
+		sw, sh, err := s.Fonts[size].SizeUTF8(text)
+		if err == nil {
+			surf.Blit(nil, s.Surface, &sdl.Rect{x - int32(sw)/2, y - int32(sh)/2, 0, 0})
+		}
+	} else {
+		fmt.Println(err)
+	}
+	if surf != nil {
+		surf.Free()
+	}
+}
+
+func (s *SignState) blitWhetherOpen(open bool) {
 	// White "Closed" on red background.
-	fill := white
 	s.BackgroundFill = red
 	// White "Open" on green background.
 	if open {
 		s.BackgroundFill = green
 	}
 	// Draw that, centered and big.
-	openvg.FillRGB(openvg.UnwrapRGBA(fill))
-	openvg.TextMid(960, 1080-openvg.TextHeight(defaultFont, studioSize)-openvg.TextDepth(defaultFont, studioSize)-openvg.TextDepth(defaultFont, titleSize)-openvg.TextHeight(defaultFont, titleSize)/2, s.Title, defaultFont, titleSize)
+	s.blitGeneric(titleSize, s.Title, white, width/2, height/2)
 }
 
-func (s *SignState) drawMentorOnDuty() {
+func (s *SignState) blitMentorOnDuty() {
 	// Open + normal operation.
 	if s.Open && s.SwitchValue == stateOpenNormal {
 		// White text
-		openvg.FillRGB(openvg.UnwrapRGBA(white))
-		openvg.Text(0, openvg.TextHeight(defaultFont, subtitleSize)+openvg.TextDepth(defaultFont, subtitleSize), makeMentorOnDutyStr(s.Subtitle, true), defaultFont, subtitleSize)
-		openvg.Text(0, openvg.TextDepth(defaultFont, subtitleSize), s.Subtitle, defaultFont, subtitleSize)
+		s.blitGeneric(subtitleSize, makeMentorOnDutyStr(s.Subtitle, true), white, width*1/8, int32(height*7/8 - s.Fonts[subtitleSize].Height()))
+		s.blitGeneric(subtitleSize, s.Subtitle, white, width*1/8, height*7/8)
 	}
 }
 
-func (s *SignState) drawTime() {
+func (s *SignState) blitTime() {
 	now := time.Now()
-	openvg.TextEnd(1920, openvg.TextHeight(defaultFont, timeSize)+openvg.TextDepth(defaultFont, timeSize), now.Format(time.Kitchen), defaultFont, timeSize)
+	s.blitGeneric(timeSize, now.Format(time.Kitchen), white, width*7/8, height*7/8)
 }

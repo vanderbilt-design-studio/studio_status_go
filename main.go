@@ -2,18 +2,26 @@ package main
 
 import (
 	"github.com/sameer/fsm/moore"
-	"github.com/sameer/openvg"
 	"github.com/tarm/serial"
-	"image/color"
+	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/ttf"
 	"time"
+	"net/http"
+	_ "net/http/pprof"
 )
 
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert ticks per second to useful number
 
+const width, height = 1920, 1080
+
+const font = "Helvetica-Bold.ttf"
+
 type SignState struct {
 	Init           bool
-	Width, Height  int        // Display size
-	BackgroundFill color.RGBA // Background fill
+	BackgroundFill sdl.Color // Background fill
+	Window         *sdl.Window
+	Surface        *sdl.Surface
+	Fonts          map[int]*ttf.Font
 	Open           bool
 	SwitchValue    SwitchState
 	Motion         bool
@@ -30,7 +38,31 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 	i := input.(*SignInput)
 	if !s.Init {
 		// Init to default state
-		s.Width, s.Height = openvg.Init()
+		if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
+			return nil, err
+		}
+		if window, err := sdl.CreateWindow("", 0, 0, width, height, sdl.WINDOW_FULLSCREEN|sdl.WINDOW_SHOWN); err != nil {
+			return nil, err
+		} else if surf, err := window.GetSurface(); err == nil {
+			s.Window, s.Surface = window, surf
+		} else {
+			return err, nil
+		}
+		if err := ttf.Init(); err != nil {
+			return nil, err
+		} else {
+			s.Fonts = make(map[int]*ttf.Font)
+			for _, size := range desiredFontSizes {
+				if font, err := ttf.OpenFont(font, size); err != nil {
+					return nil, err
+				} else {
+					font.SetStyle(ttf.STYLE_BOLD)
+					font.SetHinting(ttf.HINTING_MONO)
+					s.Fonts[size] = font
+				}
+			}
+		}
+
 		s.BackgroundFill = white
 		s.Open = false
 		s.SwitchValue = stateClosedForced
@@ -76,12 +108,17 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 			s.relayArduino.Flush()
 			s.relayArduino.Close()
 		}
+		s.Window.Destroy()
+		for _, font := range s.Fonts {
+			font.Close()
+		}
 		s = nil
 	}
 
 	if s == nil { // This is the quit state. Cleanup after ourselves.
 		inputState.finish()
-		openvg.Finish()
+		ttf.Quit()
+		sdl.Quit()
 		return nil, nil
 	} else {
 		return s, err
@@ -96,5 +133,8 @@ func main() {
 		inputFunction,
 		outputFunction,
 	)
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
 	mm.Run(time.NewTicker(tick))
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	"bytes"
 	"github.com/sameer/fsm/moore"
 	"github.com/vanderbilt-design-studio/studio-statistics"
@@ -69,42 +68,36 @@ func spawnStatsPoster() {
 	const statsPostPeriod = time.Duration(1 * time.Minute)
 	go func() {
 		tick := time.NewTicker(statsPostPeriod)
-		for sigstate.Load() == "" || sigstate.Load() == nil {
-			select {
-			case <-tick.C:
-				fmt.Println("Beginning post...")
-				x_api_key := os.Getenv("x_api_key")
-				if x_api_key == "" {
-					fmt.Println("No api key, continuing")
-					continue
-				}
-				fmt.Println("Reading file")
-				content, err := ioutil.ReadFile(logFilename)
-				if err != nil {
-					fmt.Println("Error in accessing file:", err)
-					continue
-				}
-				var buf bytes.Buffer
-				req, err := http.NewRequest("POST", "http://spuri.io/studio-statistics.png", &buf)
-				if err != nil {
-					fmt.Println("Failed to prepare post request:", err)
-					continue
-				}
-				req.Header.Add("content-type", "image/png")
-				req.Header.Add("x-api-key", x_api_key)
-				fmt.Println("Making graph")
-				if err := studio_statistics.MakeGraph(bytes.NewReader(content), &buf); err != nil {
-					fmt.Println("Error in trying to make graph", err)
-				}
-				if _, err := http.DefaultClient.Do(req); err != nil {
-					fmt.Println("Error in trying to post data", err)
-				}
-				fmt.Println("Stats posted!")
-			default:
+		for range tick.C {
+			fmt.Println("Beginning post...")
+			x_api_key := os.Getenv("x_api_key")
+			if x_api_key == "" {
+				fmt.Println("No api key, continuing")
 				continue
 			}
+			fmt.Println("Reading file")
+			content, err := ioutil.ReadFile(logFilename)
+			if err != nil {
+				fmt.Println("Error in accessing file:", err)
+				continue
+			}
+			var buf bytes.Buffer
+			req, err := http.NewRequest("POST", "http://spuri.io/studio-statistics.png", &buf)
+			if err != nil {
+				fmt.Println("Failed to prepare post request:", err)
+				continue
+			}
+			req.Header.Add("content-type", "image/png")
+			req.Header.Add("x-api-key", x_api_key)
+			fmt.Println("Making graph")
+			if err := studio_statistics.MakeGraph(bytes.NewReader(content), &buf); err != nil {
+				fmt.Println("Error in trying to make graph", err)
+			}
+			if _, err := http.DefaultClient.Do(req); err != nil {
+				fmt.Println("Error in trying to post data", err)
+			}
+			fmt.Println("Stats posted!")
 		}
-		fmt.Println("Done posting, got", sigstate.Load())
 	}()
 }
 

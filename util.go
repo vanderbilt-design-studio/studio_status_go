@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/tarm/serial"
+	"github.com/veandco/go-sdl2/sdl"
 	"sync"
 )
 
@@ -47,3 +48,7 @@ var AcquireArduinoUID = func() func(byte) *serial.Port {
 		return nil
 	}
 }()
+
+func colorToUint32(c sdl.Color) uint32 {
+	return uint32(c.B) ^ (uint32(c.G) << 8) ^ (uint32(c.R) << 16) ^ (uint32(c.A) << 24)
+}
