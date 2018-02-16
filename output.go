@@ -37,12 +37,10 @@ func spawnLogAndPost() chan SignState {
 	const logAndPostPeriod = time.Duration(5 * time.Second)
 	c := make(chan SignState)
 	go func(stateChannel chan SignState) {
-		if os.Getenv("DEV") != "" {
-			return
-		}
+		isDev := os.Getenv("DEV") != ""
 		tick := time.NewTicker(logAndPostPeriod)
 		logFile, err := os.OpenFile(logFilename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-		shouldLog := true
+		shouldLog := !isDev
 		if err != nil {
 			fmt.Println(err)
 			shouldLog = false
@@ -53,7 +51,9 @@ func spawnLogAndPost() chan SignState {
 			state := <-stateChannel
 			select {
 			case <-tick.C:
-				state.Post()
+				if !isDev {
+					state.Post()
+				}
 				if shouldLog {
 					logMutex.Lock()
 					state.Log(logFile)
@@ -76,6 +76,10 @@ func spawnStatsPoster() {
 			x_api_key := os.Getenv("x_api_key")
 			if x_api_key == "" {
 				fmt.Println("No api key, continuing")
+				continue
+			}
+			if os.Getenv("DEV") != "" {
+				fmt.Println("Dev env, continuing")
 				continue
 			}
 			fmt.Println("Reading file")

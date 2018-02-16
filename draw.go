@@ -63,8 +63,6 @@ func (s *SignState) blitDesignStudio() {
 	s.blitCentered(studioSize, str, white, width/2, int32(s.Fonts[studioSize].Height()/2))
 }
 
-var cachedBlits = make(map[int]map[string]*sdl.Surface)
-
 func (s *SignState) blitCentered(size int, text string, color sdl.Color, x, y int32) {
 	sw, sh, err := s.Fonts[size].SizeUTF8(text)
 	if err != nil {
@@ -75,26 +73,17 @@ func (s *SignState) blitCentered(size int, text string, color sdl.Color, x, y in
 }
 
 func (s *SignState) blitLeft(size int, text string, color sdl.Color, x, y int32) {
-	if _, ok := cachedBlits[size]; !ok {
-		cachedBlits[size] = make(map[string]*sdl.Surface)
-	}
-
-	surf, ok := cachedBlits[size][text]
-	if !ok {
-		var err error
-		surf, err = s.Fonts[size].RenderUTF8Blended(text, color)
-		if err != nil {
-			fmt.Println(err)
-			if surf != nil {
-				surf.Free()
-			}
+	surf, err := s.Fonts[size].RenderUTF8Blended(text, color)
+	if err != nil {
+		fmt.Println(err)
+		if surf != nil {
+			surf.Free()
 			surf = nil
-		} else {
-			ok = true
 		}
 	}
-	if surf != nil && ok {
+	if surf != nil {
 		surf.Blit(nil, s.ScreenSurf, &sdl.Rect{x, y, 0, 0})
+		surf.Free()
 	}
 }
 
