@@ -17,7 +17,7 @@ type SignState struct {
 	Init           bool
 	BackgroundFill sdl.Color // Background fill
 	Window         *sdl.Window
-	Surface        *sdl.Surface
+	ScreenSurf     *sdl.Surface
 	Fonts          map[int]*ttf.Font
 	Open           bool
 	SwitchValue    SwitchState
@@ -37,7 +37,7 @@ func initState(s *SignState) (*SignState, error) {
 	if window, err := sdl.CreateWindow("", 0, 0, width, height, sdl.WINDOW_FULLSCREEN|sdl.WINDOW_SHOWN); err != nil {
 		return nil, err
 	} else if surf, err := window.GetSurface(); err == nil {
-		s.Window, s.Surface = window, surf
+		s.Window, s.ScreenSurf = window, surf
 	} else {
 		return nil, err
 	}

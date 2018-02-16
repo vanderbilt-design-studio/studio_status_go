@@ -37,6 +37,9 @@ func spawnLogAndPost() chan SignState {
 	const logAndPostPeriod = time.Duration(5 * time.Second)
 	c := make(chan SignState)
 	go func(stateChannel chan SignState) {
+		if os.Getenv("DEV") != "" {
+			return
+		}
 		tick := time.NewTicker(logAndPostPeriod)
 		logFile, err := os.OpenFile(logFilename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 		shouldLog := true

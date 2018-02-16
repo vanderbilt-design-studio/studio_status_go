@@ -26,10 +26,10 @@ var (
 var fullscreen = &sdl.Rect{0, 0, width, height}
 
 func (s *SignState) draw() {
-	s.Surface.FillRect(fullscreen, colorToUint32(s.BackgroundFill)) // Fill BG vals
-	s.blitDesignStudio()                                            // Draw the words "Design Studio"
-	s.blitWhetherOpen(s.Open)                                       // Handles whether the studio is open
-	s.blitMentorOnDuty()                                            // Mentor name if there is one on duty
+	s.ScreenSurf.FillRect(fullscreen, colorToUint32(s.BackgroundFill)) // Fill BG vals
+	s.blitDesignStudio()                                               // Draw the words "Design Studio"
+	s.blitWhetherOpen(s.Open)                                          // Handles whether the studio is open
+	s.blitMentorOnDuty()                                               // Mentor name if there is one on duty
 	s.blitTime()
 	s.Window.UpdateSurface()
 }
@@ -78,6 +78,7 @@ func (s *SignState) blitLeft(size int, text string, color sdl.Color, x, y int32)
 	if _, ok := cachedBlits[size]; !ok {
 		cachedBlits[size] = make(map[string]*sdl.Surface)
 	}
+
 	surf, ok := cachedBlits[size][text]
 	if !ok {
 		var err error
@@ -88,23 +89,12 @@ func (s *SignState) blitLeft(size int, text string, color sdl.Color, x, y int32)
 				surf.Free()
 			}
 			surf = nil
-		}
-		var optimizedSurf *sdl.Surface
-		optimizedSurf, err = surf.Convert(s.Surface.Format, 0)
-		if err != nil {
-			fmt.Println(err)
-			if optimizedSurf != nil {
-				optimizedSurf.Free()
-			}
-			surf.Free()
-			cachedBlits[size][text] = optimizedSurf
 		} else {
-			cachedBlits[size][text] = surf
+			ok = true
 		}
 	}
-
-	if surf != nil {
-		surf.Blit(nil, s.Surface, &sdl.Rect{x, y, 0, 0})
+	if surf != nil && ok {
+		surf.Blit(nil, s.ScreenSurf, &sdl.Rect{x, y, 0, 0})
 	}
 }
 
