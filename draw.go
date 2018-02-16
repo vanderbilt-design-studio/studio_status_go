@@ -5,6 +5,9 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 	"strings"
 	"time"
+	"container/list"
+	"hash/crc64"
+	"strconv"
 )
 
 const font = "Helvetica-Bold.ttf" // Helvetica font is beautiful for long distance reading.
@@ -72,18 +75,44 @@ func (s *SignState) blitCentered(size int, text string, color sdl.Color, x, y in
 	}
 }
 
+var cacheList = list.New()
+
+type cachedSurface struct {
+	surf *sdl.Surface
+	checksum uint64
+}
+
+var crc64Table = crc64.MakeTable(crc64.ISO)
 func (s *SignState) blitLeft(size int, text string, color sdl.Color, x, y int32) {
-	surf, err := s.Fonts[size].RenderUTF8Blended(text, color)
-	if err != nil {
-		fmt.Println(err)
-		if surf != nil {
-			surf.Free()
-			surf = nil
+	checksum := crc64.Checksum([]byte(text + strconv.Itoa(size) + strconv.Itoa(int(colorToUint32(color)))), crc64Table)
+	var surf *sdl.Surface
+	for e := cacheList.Front(); e != cacheList.Back(); e = e.Next() {
+		if e.Value.(cachedSurface).checksum == checksum {
+			surf = e.Value.(cachedSurface).surf
+			cacheList.MoveToFront(e)
+			break
 		}
 	}
+	if surf == nil {
+		var err error
+		surf, err = s.Fonts[size].RenderUTF8Blended(text, color)
+		if err != nil {
+			fmt.Println(err)
+			if surf != nil {
+				surf.Free()
+				surf = nil
+			}
+		} else {
+			if cacheList.Len() > 20 {
+				cacheList.Back().Value.(cachedSurface).surf.Free()
+				cacheList.Remove(cacheList.Back())
+			}
+			cacheList.PushFront(cachedSurface{surf, checksum})
+		}
+	}
+
 	if surf != nil {
 		surf.Blit(nil, s.ScreenSurf, &sdl.Rect{x, y, 0, 0})
-		surf.Free()
 	}
 }
 

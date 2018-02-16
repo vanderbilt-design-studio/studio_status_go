@@ -9,6 +9,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"time"
+	"fmt"
 )
 
 const tick = time.Duration(1000 / 30 * time.Millisecond) // convert ticks per second to useful number
@@ -33,13 +34,20 @@ func initState(s *SignState) (*SignState, error) {
 	// Init to default state
 	if err := sdl.Init(sdl.INIT_VIDEO); err != nil {
 		return nil, err
-	}
-	if window, err := sdl.CreateWindow("", 0, 0, width, height, sdl.WINDOW_FULLSCREEN|sdl.WINDOW_SHOWN); err != nil {
-		return nil, err
-	} else if surf, err := window.GetSurface(); err == nil {
-		s.Window, s.ScreenSurf = window, surf
 	} else {
+		if sdl.ShowCursor(sdl.QUERY) == sdl.ENABLE {
+			sdl.ShowCursor(sdl.DISABLE)
+			if sdl.ShowCursor(sdl.QUERY) == sdl.ENABLE {
+				fmt.Println("failed to hide cursor")
+			}
+		}
+	}
+	if window, err := sdl.CreateWindow("", 0, 0, width, height, sdl.WINDOW_FULLSCREEN|sdl.WINDOW_SHOWN|sdl.WINDOW_BORDERLESS); err != nil {
 		return nil, err
+	} else if surf, err := window.GetSurface(); err != nil {
+		return nil, err
+	} else {
+		s.Window, s.ScreenSurf = window, surf
 	}
 	if err := ttf.Init(); err != nil {
 		return nil, err
