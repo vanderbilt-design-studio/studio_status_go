@@ -26,10 +26,9 @@ var (
 	yellow = sdl.Color{255, 178, 0, 255}
 	white  = sdl.Color{255, 255, 255, 255}
 )
-var fullscreen = &sdl.Rect{0, 0, width, height}
 
 func (s *SignState) draw() {
-	s.ScreenSurf.FillRect(fullscreen, colorToUint32(s.BackgroundFill)) // Fill BG vals
+	s.ScreenSurf.FillRect(nil, colorToUint32(s.BackgroundFill)) // Fill BG vals
 	s.blitDesignStudio()                                               // Draw the words "Design Studio"
 	s.blitWhetherOpen(s.Open)                                          // Handles whether the studio is open
 	s.blitMentorOnDuty()                                               // Mentor name if there is one on duty
@@ -37,7 +36,7 @@ func (s *SignState) draw() {
 	s.Window.UpdateSurface()
 }
 
-var desiredFontSizes = []int{120, 250, 580}
+var desiredFontSizes = [3]int{120, 250, 580}
 
 const (
 	studioSize       = 250

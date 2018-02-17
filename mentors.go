@@ -9,7 +9,7 @@ type mentorShift struct {
 	name     string
 }
 
-type mentorShifts []mentorShift
+type mentorShifts [25]mentorShift
 
 const mentorDefaultShiftDuration = time.Duration(time.Hour * 2)
 
@@ -47,7 +47,6 @@ var shifts = mentorShifts{
 func (this mentorShifts) getMentorsOnDuty() (mentorsOnDuty []mentorShift) {
 	now := time.Now()
 	y, m, d := now.Date()
-	mentorsOnDuty = make([]mentorShift, 0, 2)
 	for _, shift := range this {
 		shiftStart := time.Date(y, m, d, shift.hour, 0, 0, 0, time.Local)
 		if shift.weekday == now.Weekday() && shiftStart.Before(now) && shiftStart.Add(shift.duration).After(now) {

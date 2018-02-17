@@ -12,7 +12,7 @@ import (
 	"fmt"
 )
 
-const tick = time.Duration(1000 / 30 * time.Millisecond) // convert ticks per second to useful number
+const tick = time.Duration(1000 / 22 * time.Millisecond) // convert ticks per second to useful number
 
 type SignState struct {
 	Init           bool
