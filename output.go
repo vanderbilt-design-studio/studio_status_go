@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/sameer/fsm/moore"
 	"github.com/vanderbilt-design-studio/studio-statistics"
+	"github.com/veandco/go-sdl2/sdl"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 )
 
@@ -20,11 +22,35 @@ var sigstate atomic.Value
 
 func spawnSignalBroadcaster() {
 	sigchan := make(chan os.Signal, 2)
-	signal.Notify(sigchan, os.Kill, os.Interrupt)
+	signal.Notify(sigchan, os.Kill, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 	sigstate.Store("")
 	go func() {
-		v := <-sigchan
-		sigstate.Store(v.String())
+		signalListenTicker := time.NewTicker(time.Millisecond * 50)
+		for sigstate.Load() == "" || sigstate.Load() == nil {
+			<-signalListenTicker.C
+			select {
+			case v := <-sigchan:
+				sigstate.Store(v.String())
+			default:
+				continue
+			}
+		}
+	}()
+}
+
+func spawnSDLEventWaiter() {
+	go func() {
+		for sigstate.Load() == "" || sigstate.Load() == nil {
+			event := sdl.WaitEventTimeout(50)
+			switch event.(type) {
+			case *sdl.QuitEvent:
+				sigstate.Store("SDL quit event issued")
+			case *sdl.KeyboardEvent:
+				if ke := event.(*sdl.KeyboardEvent); ke.Keysym.Sym == sdl.K_ESCAPE || ke.Keysym.Sym == sdl.K_q {
+					sigstate.Store("SDL keypress quit event issued")
+				}
+			}
+		}
 	}()
 }
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/sameer/fsm/moore"
 	"github.com/tarm/serial"
 	"github.com/veandco/go-sdl2/sdl"
@@ -9,7 +10,6 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"time"
-	"fmt"
 )
 
 const tick = time.Duration(1000 / 22 * time.Millisecond) // convert ticks per second to useful number
@@ -42,7 +42,7 @@ func initState(s *SignState) (*SignState, error) {
 			}
 		}
 	}
-	if window, err := sdl.CreateWindow("", 0, 0, width, height, sdl.WINDOW_FULLSCREEN|sdl.WINDOW_SHOWN|sdl.WINDOW_BORDERLESS); err != nil {
+	if window, err := sdl.CreateWindow("", 0, 0, width, height, sdl.WINDOW_FULLSCREEN|sdl.WINDOW_SHOWN); err != nil {
 		return nil, err
 	} else if surf, err := window.GetSurface(); err != nil {
 		return nil, err
@@ -71,6 +71,7 @@ func initState(s *SignState) (*SignState, error) {
 	s.Title = "Closed"
 	s.Subtitle = ""
 	spawnSignalBroadcaster()
+	spawnSDLEventWaiter()
 	s.LogAndPostChan = spawnLogAndPost()
 	spawnStatsPoster()
 	s.relayArduino = AcquireArduinoUID(32)
@@ -114,7 +115,8 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		s.Subtitle = ""
 	}
 
-	if sigstate.Load() != "" {
+	if reason := sigstate.Load(); reason != "" {
+		fmt.Print("Gracefully shutting down because of \"", reason, "\"...")
 		if s.relayArduino != nil {
 			s.relayArduino.Flush()
 			s.relayArduino.Close()
@@ -130,6 +132,7 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		inputState.finish()
 		ttf.Quit()
 		sdl.Quit()
+		fmt.Println("done!")
 		return nil, nil
 	} else {
 		return s, nil

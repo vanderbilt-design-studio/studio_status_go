@@ -1,13 +1,13 @@
 package main
 
 import (
+	"container/list"
 	"fmt"
 	"github.com/veandco/go-sdl2/sdl"
-	"strings"
-	"time"
-	"container/list"
 	"hash/crc64"
 	"strconv"
+	"strings"
+	"time"
 )
 
 const font = "Helvetica-Bold.ttf" // Helvetica font is beautiful for long distance reading.
@@ -29,9 +29,9 @@ var (
 
 func (s *SignState) draw() {
 	s.ScreenSurf.FillRect(nil, colorToUint32(s.BackgroundFill)) // Fill BG vals
-	s.blitDesignStudio()                                               // Draw the words "Design Studio"
-	s.blitWhetherOpen(s.Open)                                          // Handles whether the studio is open
-	s.blitMentorOnDuty()                                               // Mentor name if there is one on duty
+	s.blitDesignStudio()                                        // Draw the words "Design Studio"
+	s.blitWhetherOpen(s.Open)                                   // Handles whether the studio is open
+	s.blitMentorOnDuty()                                        // Mentor name if there is one on duty
 	s.blitTime()
 	s.Window.UpdateSurface()
 }
@@ -77,13 +77,14 @@ func (s *SignState) blitCentered(size int, text string, color sdl.Color, x, y in
 var cacheList = list.New()
 
 type cachedSurface struct {
-	surf *sdl.Surface
+	surf     *sdl.Surface
 	checksum uint64
 }
 
 var crc64Table = crc64.MakeTable(crc64.ISO)
+
 func (s *SignState) blitLeft(size int, text string, color sdl.Color, x, y int32) {
-	checksum := crc64.Checksum([]byte(text + strconv.Itoa(size) + strconv.Itoa(int(colorToUint32(color)))), crc64Table)
+	checksum := crc64.Checksum([]byte(text+strconv.Itoa(size)+strconv.Itoa(int(colorToUint32(color)))), crc64Table)
 	var surf *sdl.Surface
 	for e := cacheList.Front(); e != cacheList.Back(); e = e.Next() {
 		if e.Value.(cachedSurface).checksum == checksum {
