@@ -94,10 +94,10 @@ func spawnLogAndPost() chan SignState {
 }
 
 func spawnStatsPoster() {
-	const statsPostPeriod = time.Duration(1 * time.Minute)
+	const statsPostPeriod = time.Duration(2 * time.Minute)
 	go func() {
 		tick := time.NewTicker(statsPostPeriod)
-		for range tick.C {
+		for {
 			fmt.Println("Beginning post...")
 			x_api_key := os.Getenv("x_api_key")
 			if x_api_key == "" {
@@ -130,6 +130,7 @@ func spawnStatsPoster() {
 				fmt.Println("Error in trying to post data", err)
 			}
 			fmt.Println("Stats posted!")
+			<-tick.C
 		}
 	}()
 }
