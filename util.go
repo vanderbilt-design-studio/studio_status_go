@@ -9,15 +9,16 @@ import (
 
 var AcquireArduinoUID = func() func(byte) *serial.Port {
 	mtx := sync.Mutex{}
+	ports := []int{0, 1, 2}
 	acquiredMap := make(map[int]bool)
-	for _, port := range []int{0, 1, 2} {
+	for port := range ports {
 		acquiredMap[port] = false
 	}
 	return func(uid byte) *serial.Port {
 		mtx.Lock()
 		defer mtx.Unlock()
-		for port, isAcquired := range acquiredMap {
-			if isAcquired {
+		for port := range ports {
+			if acquiredMap[port] {
 				continue
 			}
 			serialConf := &serial.Config{Name: fmt.Sprint("/dev/ttyACM", port), Baud: 9600}
