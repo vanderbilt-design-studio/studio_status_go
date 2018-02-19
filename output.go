@@ -115,21 +115,22 @@ func spawnStatsPoster() {
 				continue
 			}
 			var buf bytes.Buffer
+			fmt.Println("Making graph")
+			if err := studio_statistics.MakeGraph(bytes.NewReader(content), &buf); err != nil {
+				fmt.Println("Error in trying to make graph", err)
+			}
 			req, err := http.NewRequest("POST", "http://spuri.io/studio-statistics.png", &buf)
 			if err != nil {
 				fmt.Println("Failed to prepare post request:", err)
 				continue
 			}
 			req.Header.Add("content-type", "image/png")
+			req.Header.Add("content-length", buf.Len())
 			req.Header.Add("x-api-key", x_api_key)
-			fmt.Println("Making graph")
-			if err := studio_statistics.MakeGraph(bytes.NewReader(content), &buf); err != nil {
-				fmt.Println("Error in trying to make graph", err)
-			}
 			if _, err := http.DefaultClient.Do(req); err != nil {
 				fmt.Println("Error in trying to post data", err)
 			}
-			fmt.Println("Stats posted with size ", buf.Len())
+			fmt.Println("Stats posted with size", buf.Len())
 			<-tick.C
 		}
 	}()
