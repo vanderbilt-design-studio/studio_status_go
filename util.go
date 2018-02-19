@@ -29,6 +29,7 @@ var AcquireArduinoUID = func() func(byte) *serial.Port {
 				count, err := serialPort.Read(buf)
 				if buf[0] == uid && err == nil {
 					acquiredMap[port] = true
+					fmt.Println("Successfully got Arduino for req", uid)
 					return serialPort
 				}
 				serialPort.Close()
