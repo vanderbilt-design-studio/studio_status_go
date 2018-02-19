@@ -129,7 +129,7 @@ func spawnStatsPoster() {
 			if _, err := http.DefaultClient.Do(req); err != nil {
 				fmt.Println("Error in trying to post data", err)
 			}
-			fmt.Println("Stats posted!")
+			fmt.Println("Stats posted with size ", buf.Len())
 			<-tick.C
 		}
 	}()
