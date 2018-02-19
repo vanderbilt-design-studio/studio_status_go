@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -125,7 +126,7 @@ func spawnStatsPoster() {
 				continue
 			}
 			req.Header.Add("content-type", "image/png")
-			req.Header.Add("content-length", buf.Len())
+			req.Header.Add("content-length", strconv.Itoa(buf.Len()))
 			req.Header.Add("x-api-key", x_api_key)
 			if _, err := http.DefaultClient.Do(req); err != nil {
 				fmt.Println("Error in trying to post data", err)
