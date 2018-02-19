@@ -60,7 +60,7 @@ const logFilename = "activity.log"
 var logMutex sync.Mutex
 
 func spawnLogAndPost() chan SignState {
-	const logAndPostPeriod = time.Duration(5 * time.Second)
+	const logAndPostPeriod = time.Duration(1 * time.Second)
 	c := make(chan SignState)
 	go func(stateChannel chan SignState) {
 		isDev := os.Getenv("DEV") != ""
