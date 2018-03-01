@@ -106,8 +106,8 @@ func (s *SignState) blitLeft(size int, text string, color sdl.Color, x, y int32)
 			}
 		} else {
 			tex, err = s.Renderer.CreateTextureFromSurface(surf)
+			surf.Free()
 			if err != nil {
-				surf.Free()
 				if tex != nil {
 					tex.Destroy()
 					tex = nil
