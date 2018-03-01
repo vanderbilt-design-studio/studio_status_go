@@ -99,6 +99,7 @@ func spawnStatsPoster() {
 	go func() {
 		tick := time.NewTicker(statsPostPeriod)
 		for {
+			<-tick.C
 			fmt.Println("Beginning post...")
 			x_api_key := os.Getenv("x_api_key")
 			if x_api_key == "" {
@@ -132,7 +133,6 @@ func spawnStatsPoster() {
 				fmt.Println("Error in trying to post data", err)
 			}
 			fmt.Println("Stats posted with size", buf.Len())
-			<-tick.C
 		}
 	}()
 }

@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/tarm/serial"
-	"github.com/veandco/go-sdl2/sdl"
 	"sync"
+	"time"
 )
 
 var AcquireArduinoUID = func() func(byte) *serial.Port {
@@ -20,7 +20,7 @@ var AcquireArduinoUID = func() func(byte) *serial.Port {
 			if isAcquired {
 				continue
 			}
-			serialConf := &serial.Config{Name: fmt.Sprint("/dev/ttyACM", port), Baud: 9600}
+			serialConf := &serial.Config{Name: fmt.Sprint("/dev/ttyACM", port), Baud: 9600, ReadTimeout: time.Second*10}
 			serialPort, err := serial.OpenPort(serialConf) // Try to open a serial port.
 			if err == nil {
 				serialPort.Write([]byte{identReq})
@@ -49,7 +49,3 @@ var AcquireArduinoUID = func() func(byte) *serial.Port {
 		return nil
 	}
 }()
-
-func colorToUint32(c sdl.Color) uint32 {
-	return uint32(c.B) ^ (uint32(c.G) << 8) ^ (uint32(c.R) << 16) ^ (uint32(c.A) << 24)
-}

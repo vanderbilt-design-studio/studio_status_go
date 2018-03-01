@@ -18,7 +18,7 @@ type SignState struct {
 	Init           bool
 	BackgroundFill sdl.Color // Background fill
 	Window         *sdl.Window
-	ScreenSurf     *sdl.Surface
+	Renderer       *sdl.Renderer
 	Fonts          map[int]*ttf.Font
 	Open           bool
 	SwitchValue    SwitchState
@@ -42,12 +42,10 @@ func initState(s *SignState) (*SignState, error) {
 			}
 		}
 	}
-	if window, err := sdl.CreateWindow("", 0, 0, width, height, sdl.WINDOW_FULLSCREEN|sdl.WINDOW_SHOWN); err != nil {
-		return nil, err
-	} else if surf, err := window.GetSurface(); err != nil {
+	if window, rend, err := sdl.CreateWindowAndRenderer(width, height, sdl.WINDOW_FULLSCREEN|sdl.WINDOW_SHOWN|sdl.WINDOW_BORDERLESS); err != nil {
 		return nil, err
 	} else {
-		s.Window, s.ScreenSurf = window, surf
+		s.Window, s.Renderer = window, rend
 	}
 	if err := ttf.Init(); err != nil {
 		return nil, err
@@ -122,6 +120,7 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 			s.relayArduino.Close()
 		}
 		s.Window.Destroy()
+		s.Renderer.Destroy()
 		for _, font := range s.Fonts {
 			font.Close()
 		}
