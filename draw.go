@@ -28,12 +28,13 @@ var (
 )
 
 func (s *SignState) draw() {
-	s.ScreenSurf.FillRect(nil, colorToUint32(s.BackgroundFill)) // Fill BG vals
-	s.blitDesignStudio()                                        // Draw the words "Design Studio"
-	s.blitWhetherOpen(s.Open)                                   // Handles whether the studio is open
-	s.blitMentorOnDuty()                                        // Mentor name if there is one on duty
+	s.Renderer.SetDrawColor(s.BackgroundFill.R, s.BackgroundFill.G, s.BackgroundFill.B, s.BackgroundFill.A)
+	s.Renderer.Clear()
+	s.blitDesignStudio()      // Draw the words "Design Studio"
+	s.blitWhetherOpen(s.Open) // Handles whether the studio is open
+	s.blitMentorOnDuty()      // Mentor name if there is one on duty
 	s.blitTime()
-	s.Window.UpdateSurface()
+	s.Renderer.Present()
 }
 
 var desiredFontSizes = [3]int{120, 250, 580}
@@ -76,25 +77,26 @@ func (s *SignState) blitCentered(size int, text string, color sdl.Color, x, y in
 
 var cacheList = list.New()
 
-type cachedSurface struct {
-	surf     *sdl.Surface
-	checksum uint64
+type cachedTexture struct {
+	tex           *sdl.Texture
+	checksum      uint64
 }
 
 var crc64Table = crc64.MakeTable(crc64.ISO)
 
 func (s *SignState) blitLeft(size int, text string, color sdl.Color, x, y int32) {
-	checksum := crc64.Checksum([]byte(text+strconv.Itoa(size)+strconv.Itoa(int(colorToUint32(color)))), crc64Table)
-	var surf *sdl.Surface
+	checksum := crc64.Checksum([]byte(text+strconv.Itoa(size)+strconv.Itoa(int(color.Uint32()))), crc64Table)
+	var tex *sdl.Texture
 	for e := cacheList.Front(); e != cacheList.Back(); e = e.Next() {
-		if e.Value.(cachedSurface).checksum == checksum {
-			surf = e.Value.(cachedSurface).surf
+		if e.Value.(cachedTexture).checksum == checksum {
+			tex = e.Value.(cachedTexture).tex
 			cacheList.MoveToFront(e)
 			break
 		}
 	}
-	if surf == nil {
+	if tex == nil {
 		var err error
+		var surf *sdl.Surface
 		surf, err = s.Fonts[size].RenderUTF8Blended(text, color)
 		if err != nil {
 			fmt.Println(err)
@@ -103,16 +105,30 @@ func (s *SignState) blitLeft(size int, text string, color sdl.Color, x, y int32)
 				surf = nil
 			}
 		} else {
-			if cacheList.Len() > 20 {
-				cacheList.Back().Value.(cachedSurface).surf.Free()
-				cacheList.Remove(cacheList.Back())
+			tex, err = s.Renderer.CreateTextureFromSurface(surf)
+			if err != nil {
+				surf.Free()
+				if tex != nil {
+					tex.Destroy()
+					tex = nil
+				}
+			} else {
+				if cacheList.Len() > 20 {
+					cacheList.Back().Value.(cachedTexture).tex.Destroy()
+					cacheList.Remove(cacheList.Back())
+				}
+					cacheList.PushFront(cachedTexture{tex, checksum})
 			}
-			cacheList.PushFront(cachedSurface{surf, checksum})
 		}
 	}
 
-	if surf != nil {
-		surf.Blit(nil, s.ScreenSurf, &sdl.Rect{x, y, 0, 0})
+	if tex != nil {
+		s.Renderer.SetDrawColor(white.R, white.G, white.B, white.A)
+		_, _, w, h, err := tex.Query()
+		if err == nil {
+			s.Renderer.Copy(tex, nil, &sdl.Rect{x, y, w, h})
+		}
+
 	}
 }
 

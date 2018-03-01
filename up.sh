@@ -4,8 +4,8 @@ cd $HOME/go/src/github.com/vanderbilt-design-studio/studio_status_go
 export GOPATH=$HOME/go
 git pull
 go build
+sed -i -e's|[^[:print:]]||g' activity.log
 while :
 do
-	./studio_status_go 2>>crashes.log # Start it & log all errors
-	date >> crashes.log  # Append crash times to log for debugging
+	./studio_status_go 2>>crashes.log || date >> crashes.log
 done
