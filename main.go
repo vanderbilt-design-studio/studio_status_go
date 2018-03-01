@@ -150,6 +150,10 @@ func main() {
 		go func() {
 			http.ListenAndServe("localhost:6060", nil)
 		}()
+	} else {
+		go func() {
+			http.ListenAndServe("0.0.0.0:6060", nil)
+		}()
 	}
 	mm.Run(time.NewTicker(tick))
 }
