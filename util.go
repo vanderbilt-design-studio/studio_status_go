@@ -21,7 +21,7 @@ var AcquireArduinoUID = func() func(byte) *serial.Port {
 			if acquiredMap[port] {
 				continue
 			}
-			serialConf := &serial.Config{Name: fmt.Sprint("/dev/ttyACM", port), Baud: 9600, ReadTimeout: time.Second*10}
+			serialConf := &serial.Config{Name: fmt.Sprint("/dev/ttyACM", port), Baud: 9600, ReadTimeout: time.Second * 10}
 			serialPort, err := serial.OpenPort(serialConf) // Try to open a serial port.
 			if err == nil {
 				serialPort.Write([]byte{identReq})

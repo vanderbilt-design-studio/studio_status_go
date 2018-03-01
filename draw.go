@@ -78,8 +78,8 @@ func (s *SignState) blitCentered(size int, text string, color sdl.Color, x, y in
 var cacheList = list.New()
 
 type cachedTexture struct {
-	tex           *sdl.Texture
-	checksum      uint64
+	tex      *sdl.Texture
+	checksum uint64
 }
 
 var crc64Table = crc64.MakeTable(crc64.ISO)
@@ -113,11 +113,11 @@ func (s *SignState) blitLeft(size int, text string, color sdl.Color, x, y int32)
 					tex = nil
 				}
 			} else {
-				if cacheList.Len() > 20 {
+				if cacheList.Len() > 6 {
 					cacheList.Back().Value.(cachedTexture).tex.Destroy()
 					cacheList.Remove(cacheList.Back())
 				}
-					cacheList.PushFront(cachedTexture{tex, checksum})
+				cacheList.PushFront(cachedTexture{tex, checksum})
 			}
 		}
 	}
