@@ -120,7 +120,6 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 			s.relayArduino.Close()
 		}
 		s.Window.Destroy()
-		s.Renderer.Destroy()
 		for _, font := range s.Fonts {
 			font.Close()
 		}
