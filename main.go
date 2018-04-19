@@ -21,6 +21,7 @@ type SignState struct {
 	Renderer       *sdl.Renderer
 	Fonts          map[int]*ttf.Font
 	Open           bool
+	DoorOpen       bool
 	SwitchValue    SwitchState
 	Motion         bool
 	Title          string
@@ -64,6 +65,7 @@ func initState(s *SignState) (*SignState, error) {
 
 	s.BackgroundFill = white
 	s.Open = false
+	s.DoorOpen = false
 	s.SwitchValue = stateClosedForced
 	s.Motion = false
 	s.Title = "Closed"
@@ -88,7 +90,7 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 	}
 
 	// Put inputs into state struct
-	s.Open = i.IsOpen()
+	s.DoorOpen, s.Open = i.IsOpen()
 	s.SwitchValue = i.GetSwitchValue()
 	s.Motion = i.IsThereMotion()
 
@@ -100,7 +102,7 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 	}
 
 	// State-based handling of subtitle
-	if s.Open && s.SwitchValue == stateOpenNormal {
+	if s.Open && s.SwitchValue == stateShifts {
 		s.Subtitle = ""
 		for _, mentorShift := range shifts.getMentorsOnDuty() {
 			if s.Subtitle != "" {
@@ -108,8 +110,22 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 			}
 			s.Subtitle += mentorShift.name
 		}
+	} else if !s.Open && s.SwitchValue == stateShifts { // Show when the studio opens next if there are shifts today
+		nextShifts := shifts.getNextMentorsOnDutyToday()
+		if len(nextShifts) > 0 {
+			s.Subtitle = nextShifts[0].time(time.Now().Date()).Format(time.Kitchen)
+		} else if len(shifts.getMentorsOnDuty()) > 0 {
+			// TODO: How to handle a missed shift in between other shifts?
+			// If there is supposed to be a shift right now and it's closed, we know that the opens at time is probably
+			// wrong so we shouldn't misinform the users. What about a shift that is separated from other shifts? Should
+			// we still say anything if that shift was missed? i.e. the possibility that there is a day where no one is
+			// on duty, due to a school holiday or other reason. For now, we depend upon a mentor to switch the sign to
+			// force closed to indicate that we shouldn't tell anyone when it opens.
+			s.Subtitle = "?"
+		} else {
+			s.Subtitle = ""
+		}
 	} else {
-		// Reset output string
 		s.Subtitle = ""
 	}
 

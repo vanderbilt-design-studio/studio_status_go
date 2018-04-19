@@ -9,6 +9,10 @@ type mentorShift struct {
 	name     string
 }
 
+func (shift *mentorShift) time(y int, m time.Month, d int) time.Time {
+	return time.Date(y, m, d, shift.hour, 0, 0, 0, time.Local)
+}
+
 type mentorShifts [25]mentorShift
 
 const mentorDefaultShiftDuration = time.Duration(time.Hour * 2)
@@ -44,14 +48,46 @@ var shifts = mentorShifts{
 	{17, time.Thursday, mentorDefaultShiftDuration, "Jesse L"},
 }
 
-func (this mentorShifts) getMentorsOnDuty() (mentorsOnDuty []mentorShift) {
-	now := time.Now()
-	y, m, d := now.Date()
-	for _, shift := range this {
-		shiftStart := time.Date(y, m, d, shift.hour, 0, 0, 0, time.Local)
-		if shift.weekday == now.Weekday() && shiftStart.Before(now) && shiftStart.Add(shift.duration).After(now) {
-			mentorsOnDuty = append(mentorsOnDuty, shift)
+func (ms mentorShifts) getMentorsOnDuty() (mentorsOnDuty []mentorShift) {
+	return ms.getShiftsAtTime(time.Now())
+}
+
+func (ms mentorShifts) getShiftsAtTime(t time.Time) (shifts []mentorShift) {
+	for _, shift := range ms.getShiftsOnWeekday(t.Weekday()) {
+		shiftStart := shift.time(t.Date())
+		// In the shift or right at the start of it
+		if (shiftStart.Before(t) && shiftStart.Add(shift.duration).After(t)) || shiftStart == t {
+			shifts = append(shifts, shift)
 		}
+	}
+	return
+}
+
+func (ms mentorShifts) getShiftsOnWeekday(weekday time.Weekday) (shifts []mentorShift) {
+	for _, shift := range ms {
+		if shift.weekday == weekday {
+			shifts = append(shifts, shift)
+		}
+	}
+	return
+}
+
+func (ms mentorShifts) getShiftsAfterTime(t time.Time) (shifts []mentorShift) {
+	for _, shift := range ms.getShiftsOnWeekday(t.Weekday()) {
+		shiftStart := shift.time(t.Date())
+		if shiftStart.After(t) {
+			shifts = append(shifts, shift)
+		}
+	}
+	return
+}
+
+func (ms mentorShifts) getNextMentorsOnDutyToday() (shifts []mentorShift) {
+	now := time.Now()
+	for _, shift := range ms.getShiftsAfterTime(now) {
+		shiftStart := shift.time(now.Date())
+		shifts = ms.getShiftsAtTime(shiftStart)
+		return
 	}
 	return
 }

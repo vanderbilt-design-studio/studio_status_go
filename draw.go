@@ -32,6 +32,7 @@ func (s *SignState) draw() {
 	s.Renderer.Clear()
 	s.blitDesignStudio()      // Draw the words "Design Studio"
 	s.blitWhetherOpen(s.Open) // Handles whether the studio is open
+	s.blitWhenOpens()
 	s.blitMentorOnDuty()      // Mentor name if there is one on duty
 	s.blitTime()
 	s.Renderer.Present()
@@ -57,6 +58,24 @@ func makeMentorOnDutyStr(subtitle string, onDutyText bool) string {
 		return fmt.Sprintf(mentorOnDutyStrf, multi)
 	} else {
 		return fmt.Sprintf(mentorPrefixStrf, multi)
+	}
+}
+
+func (s *SignState) blitWhenOpens() {
+	const openAt = "Should Open At:"
+	const notOpen = "Not Open Today"
+	if !s.Open && s.SwitchValue == stateShifts {
+		var toBlit string
+		if s.Subtitle == "" {
+			toBlit = notOpen
+		} else if s.Subtitle == "?" {
+			return
+		} else {
+			toBlit = openAt
+		}
+		// White text
+		s.blitLeft(subtitleSize, toBlit, white, width*1/64, int32(height-s.Fonts[subtitleSize].Height()*2))
+		s.blitLeft(subtitleSize, s.Subtitle, white, width*1/64, int32(height-s.Fonts[subtitleSize].Height()))
 	}
 }
 
@@ -145,7 +164,7 @@ func (s *SignState) blitWhetherOpen(open bool) {
 
 func (s *SignState) blitMentorOnDuty() {
 	// Open + normal operation.
-	if s.Open && s.SwitchValue == stateOpenNormal {
+	if s.Open && s.SwitchValue == stateShifts {
 		// White text
 		s.blitLeft(subtitleSize, makeMentorOnDutyStr(s.Subtitle, true), white, width*1/64, int32(height-s.Fonts[subtitleSize].Height()*2))
 		s.blitLeft(subtitleSize, s.Subtitle, white, width*1/64, int32(height-s.Fonts[subtitleSize].Height()))

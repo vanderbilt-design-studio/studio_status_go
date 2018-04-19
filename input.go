@@ -47,27 +47,28 @@ func (si *SignInput) finish() {
 type SwitchState int
 
 const (
-	stateOpenNormal   SwitchState = iota // 0
+	stateShifts       SwitchState = iota // 0, stateOpenNormal was confusing so it is now stateShifts
 	stateOpenForced                      // 1
 	stateClosedForced                    // 2
 )
 
-func (si *SignInput) IsOpen() bool {
+func (si *SignInput) IsOpen() (doorOpen, open bool) {
 	// Logic to determine if the studio is likely open.
 	isOpen := len(shifts.getMentorsOnDuty()) > 0
+	isDoorOpen := si.IsDoorOpen()
 	// Now check the switch state. This is a DPDT switch with the states I (normal), II (force open), and O (force closed)
 	switchValue := si.GetSwitchValue()
-	if switchValue == stateOpenNormal {
+	if switchValue == stateShifts {
 		// Door open + normally open. If a mentor misses their shift & the door is closed, the sign will say
 		// that the studio is closed.
-		return isOpen && si.IsDoorOpen()
+		return isDoorOpen, isOpen
 	} else if switchValue == stateOpenForced {
 		// As long as the door is open, forced open will work. The door *must* be open just in case anyone accidentally
 		// leaves it in forced open.
-		return si.IsDoorOpen()
+		return isDoorOpen, isDoorOpen
 	} else {
 		// Forced closed.
-		return false
+		return isDoorOpen, false
 	}
 }
 
@@ -77,7 +78,7 @@ func (si *SignInput) GetSwitchValue() SwitchState {
 		openOne, err := hwio.DigitalRead(si.gpio17)
 		if err == nil {
 			if openOne == hwio.HIGH { // It is indeed.
-				return stateOpenNormal
+				return stateShifts
 			} else {
 				// Is it actually forced open?
 				openTwo, err := hwio.DigitalRead(si.gpio27)
@@ -97,7 +98,7 @@ func (si *SignInput) GetSwitchValue() SwitchState {
 	}
 	// This will be returned if there are any errors. There's no way to really recover from fatal errors
 	// like these without manual intervention, so it is safest to assume normal operation.
-	return stateOpenNormal
+	return stateShifts
 }
 
 const (
