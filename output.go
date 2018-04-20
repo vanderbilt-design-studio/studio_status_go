@@ -94,6 +94,7 @@ func spawnStatsPoster() {
 	go func() {
 		tick := time.NewTicker(statsPostPeriod)
 		for range tick.C {
+			continue
 			fmt.Println("Beginning post...")
 			xApiKey := os.Getenv("x_api_key")
 			if xApiKey == "" {
