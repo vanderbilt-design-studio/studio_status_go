@@ -90,7 +90,7 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 	}
 
 	// Put inputs into state struct
-	s.DoorOpen, s.Open = i.IsOpen()
+	s.Open, s.DoorOpen = i.IsOpen()
 	s.SwitchValue = i.GetSwitchValue()
 	s.Motion = i.IsThereMotion()
 
