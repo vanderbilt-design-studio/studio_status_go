@@ -61,6 +61,7 @@ func (si *SignInput) IsOpen() (isOpen, isDoorOpen bool) {
 	if switchValue == stateShifts {
 		// Door open + normally open. If a mentor misses their shift & the door is closed, the sign will say
 		// that the studio is closed.
+		isOpen = isOpen && isDoorOpen
 	} else if switchValue == stateOpenForced {
 		// As long as the door is open, forced open will work. The door *must* be open just in case anyone accidentally
 		// leaves it in forced open.
