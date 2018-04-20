@@ -36,9 +36,9 @@ func initState(s *SignState) (*SignState, error) {
 	if err := sdl.Init(sdl.INIT_VIDEO); err != nil {
 		return nil, err
 	} else {
-		if sdl.ShowCursor(sdl.QUERY) == sdl.ENABLE {
+		if i, err := sdl.ShowCursor(sdl.QUERY); i == sdl.ENABLE && err == nil {
 			sdl.ShowCursor(sdl.DISABLE)
-			if sdl.ShowCursor(sdl.QUERY) == sdl.ENABLE {
+			if i, err := sdl.ShowCursor(sdl.QUERY); i == sdl.ENABLE && err != nil {
 				fmt.Println("failed to hide cursor")
 			}
 		}
@@ -112,9 +112,7 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		}
 	} else if !s.Open && s.SwitchValue == stateShifts { // Show when the studio opens next if there are shifts today
 		nextShifts := shifts.getNextMentorsOnDutyToday()
-		if len(nextShifts) > 0 {
-			s.Subtitle = nextShifts[0].time(time.Now().Date()).Format(time.Kitchen)
-		} else if len(shifts.getMentorsOnDuty()) > 0 {
+		if len(shifts.getMentorsOnDuty()) > 0 {
 			// TODO: How to handle a missed shift in between other shifts?
 			// If there is supposed to be a shift right now and it's closed, we know that the opens at time is probably
 			// wrong so we shouldn't misinform the users. What about a shift that is separated from other shifts? Should
@@ -122,6 +120,8 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 			// on duty, due to a school holiday or other reason. For now, we depend upon a mentor to switch the sign to
 			// force closed to indicate that we shouldn't tell anyone when it opens.
 			s.Subtitle = "?"
+		} else if len(nextShifts) > 0 {
+			s.Subtitle = nextShifts[0].time(time.Now().Date()).Format(time.Kitchen)
 		} else {
 			s.Subtitle = ""
 		}

@@ -52,24 +52,24 @@ const (
 	stateClosedForced                    // 2
 )
 
-func (si *SignInput) IsOpen() (doorOpen, open bool) {
+func (si *SignInput) IsOpen() (isOpen, isDoorOpen bool) {
 	// Logic to determine if the studio is likely open.
-	isOpen := len(shifts.getMentorsOnDuty()) > 0
-	isDoorOpen := si.IsDoorOpen()
+	isOpen = len(shifts.getMentorsOnDuty()) > 0
+	isDoorOpen = si.IsDoorOpen()
 	// Now check the switch state. This is a DPDT switch with the states I (normal), II (force open), and O (force closed)
 	switchValue := si.GetSwitchValue()
 	if switchValue == stateShifts {
 		// Door open + normally open. If a mentor misses their shift & the door is closed, the sign will say
 		// that the studio is closed.
-		return isDoorOpen, isOpen
 	} else if switchValue == stateOpenForced {
 		// As long as the door is open, forced open will work. The door *must* be open just in case anyone accidentally
 		// leaves it in forced open.
-		return isDoorOpen, isDoorOpen
+		isOpen = isDoorOpen
 	} else {
 		// Forced closed.
-		return isDoorOpen, false
+		isOpen = false
 	}
+	return
 }
 
 func (si *SignInput) GetSwitchValue() SwitchState {
