@@ -13,25 +13,24 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"syscall"
 	"time"
 )
 
-var sigstate atomic.Value
+var signalStateStr atomic.Value
 
 func spawnSignalBroadcaster() {
-	sigchan := make(chan os.Signal, 2)
-	signal.Notify(sigchan, os.Kill, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
-	sigstate.Store("")
+	signalChan := make(chan os.Signal, 2)
+	signal.Notify(signalChan, os.Kill, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+	signalStateStr.Store("")
 	go func() {
 		signalListenTicker := time.NewTicker(time.Millisecond * 50)
-		for sigstate.Load() == "" || sigstate.Load() == nil {
+		for signalStateStr.Load() == "" || signalStateStr.Load() == nil {
 			<-signalListenTicker.C
 			select {
-			case v := <-sigchan:
-				sigstate.Store(v.String())
+			case v := <-signalChan:
+				signalStateStr.Store(v.String())
 			default:
 				continue
 			}
@@ -41,14 +40,14 @@ func spawnSignalBroadcaster() {
 
 func spawnSDLEventWaiter() {
 	go func() {
-		for sigstate.Load() == "" || sigstate.Load() == nil {
+		for signalStateStr.Load() == "" || signalStateStr.Load() == nil {
 			event := sdl.WaitEventTimeout(50)
 			switch event.(type) {
 			case *sdl.QuitEvent:
-				sigstate.Store("SDL quit event issued")
+				signalStateStr.Store("SDL quit event issued")
 			case *sdl.KeyboardEvent:
 				if ke := event.(*sdl.KeyboardEvent); ke.Keysym.Sym == sdl.K_ESCAPE || ke.Keysym.Sym == sdl.K_q {
-					sigstate.Store("SDL keypress quit event issued")
+					signalStateStr.Store("SDL keypress quit event issued")
 				}
 			}
 		}
@@ -57,8 +56,6 @@ func spawnSDLEventWaiter() {
 
 const postUrl = "https://ds-sign.yunyul.in"
 const logFilename = "activity.log"
-
-var logMutex sync.Mutex
 
 func spawnLogAndPost() chan SignState {
 	const logAndPostPeriod = time.Duration(1 * time.Second)
@@ -74,7 +71,7 @@ func spawnLogAndPost() chan SignState {
 		} else {
 			defer logFile.Close()
 		}
-		for sigstate.Load() == "" || sigstate.Load() == nil {
+		for signalStateStr.Load() == "" || signalStateStr.Load() == nil {
 			state := <-stateChannel
 			select {
 			case <-tick.C:
@@ -82,9 +79,7 @@ func spawnLogAndPost() chan SignState {
 					state.Post()
 				}
 				if shouldLog {
-					logMutex.Lock()
 					state.Log(logFile)
-					logMutex.Unlock()
 				}
 			default:
 				continue
@@ -100,8 +95,8 @@ func spawnStatsPoster() {
 		tick := time.NewTicker(statsPostPeriod)
 		for range tick.C {
 			fmt.Println("Beginning post...")
-			x_api_key := os.Getenv("x_api_key")
-			if x_api_key == "" {
+			xApiKey := os.Getenv("x_api_key")
+			if xApiKey == "" {
 				fmt.Println("No api key, continuing")
 				continue
 			}
@@ -127,7 +122,7 @@ func spawnStatsPoster() {
 			}
 			req.Header.Add("content-type", "image/png")
 			req.Header.Add("content-length", strconv.Itoa(buf.Len()))
-			req.Header.Add("x-api-key", x_api_key)
+			req.Header.Add("x-api-key", xApiKey)
 			if _, err := http.DefaultClient.Do(req); err != nil {
 				fmt.Println("Error in trying to post data", err)
 			}
@@ -137,14 +132,26 @@ func spawnStatsPoster() {
 }
 
 func (s *SignState) Post() {
-	x_api_key := os.Getenv("x_api_key")
-	if x_api_key == "" {
+	xApiKey := os.Getenv("x_api_key")
+	if xApiKey == "" {
 		return
 	}
 
 	// TODO: grab mentor on duty
-	if s.Subtitle != "" {
-		s.Subtitle = makeMentorOnDutyStr(s.Subtitle, false) + s.Subtitle
+	if s.Subtitle != "" { // There is a subtitle
+		if !s.Open && s.SwitchValue == stateShifts { // whetherOpens text
+			if s.Subtitle == "?" { // Unknown studio dynamics from whetherOpen
+				s.Subtitle = ""
+			} else if _, err := time.Parse(s.Subtitle, time.Kitchen); err != nil { // Put opens at time
+				s.Subtitle = whetherOpensOpenAt + s.Subtitle
+			} else { // This should never be the case, but who knows -- might as well be safe
+				s.Subtitle = ""
+			}
+		} else {
+			s.Subtitle = makePluralHandlingMentorString(s.Subtitle, false) + s.Subtitle
+		}
+	} else if !s.Open && s.SwitchValue == stateShifts {
+		s.Subtitle = whetherOpensNotOpen
 	}
 	payload := strings.NewReader(fmt.Sprintf(`{"bgColor": "rgb(%v,%v,%v)", "title": "%v", "subtitle": "%v"}`,
 		s.BackgroundFill.R, s.BackgroundFill.G, s.BackgroundFill.B,
@@ -159,7 +166,7 @@ func (s *SignState) Post() {
 	}
 
 	req.Header.Add("content-type", "application/json")
-	req.Header.Add("x-api-key", x_api_key)
+	req.Header.Add("x-api-key", xApiKey)
 
 	_, err = http.DefaultClient.Do(req)
 	if err != nil {

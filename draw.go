@@ -33,7 +33,7 @@ func (s *SignState) draw() {
 	s.blitDesignStudio()      // Draw the words "Design Studio"
 	s.blitWhetherOpen(s.Open) // Handles whether the studio is open
 	s.blitWhenOpens()
-	s.blitMentorOnDuty()      // Mentor name if there is one on duty
+	s.blitMentorOnDuty() // Mentor name if there is one on duty
 	s.blitTime()
 	s.Renderer.Present()
 }
@@ -41,15 +41,17 @@ func (s *SignState) draw() {
 var desiredFontSizes = [3]int{120, 250, 580}
 
 const (
-	studioSize       = 250
-	titleSize        = 580
-	subtitleSize     = 120
-	timeSize         = 120
-	mentorOnDutyStrf = "Mentor%v on Duty: "
-	mentorPrefixStrf = "Mentor%v: "
+	studioSize          = 250
+	titleSize           = 580
+	subtitleSize        = 120
+	timeSize            = 120
+	mentorOnDutyStrf    = "Mentor%v on Duty: "
+	mentorPrefixStrf    = "Mentor%v: "
+	whetherOpensOpenAt  = "Should Open At: "
+	whetherOpensNotOpen = "Not Open Today"
 )
 
-func makeMentorOnDutyStr(subtitle string, onDutyText bool) string {
+func makePluralHandlingMentorString(subtitle string, onDutyText bool) string {
 	multi := ""
 	if strings.ContainsRune(subtitle, '&') {
 		multi = "s"
@@ -62,19 +64,17 @@ func makeMentorOnDutyStr(subtitle string, onDutyText bool) string {
 }
 
 func (s *SignState) blitWhenOpens() {
-	const openAt = "Should Open At:"
-	const notOpen = "Not Open Today"
 	if !s.Open && s.SwitchValue == stateShifts {
-		var toBlit string
+		var subHeaderToBlit string
 		if s.Subtitle == "" {
-			toBlit = notOpen
+			subHeaderToBlit = whetherOpensNotOpen
 		} else if s.Subtitle == "?" {
 			return
 		} else {
-			toBlit = openAt
+			subHeaderToBlit = whetherOpensOpenAt
 		}
 		// White text
-		s.blitLeft(subtitleSize, toBlit, white, width*1/64, int32(height-s.Fonts[subtitleSize].Height()*2))
+		s.blitLeft(subtitleSize, subHeaderToBlit, white, width*1/64, int32(height-s.Fonts[subtitleSize].Height()*2))
 		s.blitLeft(subtitleSize, s.Subtitle, white, width*1/64, int32(height-s.Fonts[subtitleSize].Height()))
 	}
 }
@@ -166,7 +166,7 @@ func (s *SignState) blitMentorOnDuty() {
 	// Open + normal operation.
 	if s.Open && s.SwitchValue == stateShifts {
 		// White text
-		s.blitLeft(subtitleSize, makeMentorOnDutyStr(s.Subtitle, true), white, width*1/64, int32(height-s.Fonts[subtitleSize].Height()*2))
+		s.blitLeft(subtitleSize, makePluralHandlingMentorString(s.Subtitle, true), white, width*1/64, int32(height-s.Fonts[subtitleSize].Height()*2))
 		s.blitLeft(subtitleSize, s.Subtitle, white, width*1/64, int32(height-s.Fonts[subtitleSize].Height()))
 	}
 }

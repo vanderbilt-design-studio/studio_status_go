@@ -129,7 +129,7 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		s.Subtitle = ""
 	}
 
-	if reason := sigstate.Load(); reason != "" {
+	if reason := signalStateStr.Load(); reason != "" {
 		fmt.Print("Gracefully shutting down because of \"", reason, "\"...")
 		if s.relayArduino != nil {
 			s.relayArduino.Flush()
