@@ -13,39 +13,29 @@ func (shift *mentorShift) time(y int, m time.Month, d int) time.Time {
 	return time.Date(y, m, d, shift.hour, 0, 0, 0, time.Local)
 }
 
-type mentorShifts [25]mentorShift
+type mentorShifts [16]mentorShift
 
 const mentorDefaultShiftDuration = time.Duration(time.Hour * 2)
 
 // Mentor names array. Each row is a day of the week (sun, mon, ..., sat). Each element in a
 // row is a mentor timeslot starting at 12PM, where each slot is 2 hours long.
 var shifts = mentorShifts{
-	{14, time.Sunday, mentorDefaultShiftDuration, "Iliya L"},
-	{16, time.Sunday, mentorDefaultShiftDuration, "Nick B"},
-	{18, time.Sunday, mentorDefaultShiftDuration, "Foard N"},
-	{14, time.Monday, mentorDefaultShiftDuration, "Lin L"},
-	{16, time.Monday, mentorDefaultShiftDuration, "Amaury P"},
-	{18, time.Monday, mentorDefaultShiftDuration, "Jeremy D"},
-	{20, time.Monday, mentorDefaultShiftDuration, "Kurt L"},
-	{14, time.Tuesday, mentorDefaultShiftDuration, "Sophia Z"},
-	{16, time.Tuesday, mentorDefaultShiftDuration, "Emily Mk"},
+	{16, time.Sunday, mentorDefaultShiftDuration, "Brayden A"},
+	{18, time.Sunday, mentorDefaultShiftDuration, "Jesse L"},
+	{14, time.Monday, mentorDefaultShiftDuration, "David L"},
+	{16, time.Monday, mentorDefaultShiftDuration, "Emily Mc."},
+	{18, time.Monday, mentorDefaultShiftDuration, "Josh P"},
+	{14, time.Tuesday, mentorDefaultShiftDuration, "Sabina S"},
+	{16, time.Tuesday, mentorDefaultShiftDuration, "Braden B"},
 	{18, time.Tuesday, mentorDefaultShiftDuration, "Christina H"},
-	{14, time.Wednesday, mentorDefaultShiftDuration, "Eric N"},
-	{16, time.Wednesday, mentorDefaultShiftDuration, "Lauren B"},
+	{20, time.Tuesday, mentorDefaultShiftDuration, "Nick B"},
+	{14, time.Wednesday, mentorDefaultShiftDuration, "Liam K"},
+	{16, time.Wednesday, mentorDefaultShiftDuration, "Swapnil P"},
 	{18, time.Wednesday, mentorDefaultShiftDuration, "Sameer P"},
-	{14, time.Thursday, mentorDefaultShiftDuration, "Alex B"},
-	{16, time.Thursday, mentorDefaultShiftDuration, "Emily Mc"},
-	{18, time.Thursday, mentorDefaultShiftDuration, "Braden B"},
-	{20, time.Thursday, mentorDefaultShiftDuration, "Jill B"},
-	{14, time.Friday, mentorDefaultShiftDuration, "Dominic G"},
-	{16, time.Friday, mentorDefaultShiftDuration, "Josh P"},
-
-	{15, time.Monday, mentorDefaultShiftDuration, "Sabina S"},
-	{15, time.Tuesday, mentorDefaultShiftDuration, "David L"},
-	{17, time.Tuesday, mentorDefaultShiftDuration, "Yunyu L"},
-	{17, time.Wednesday, mentorDefaultShiftDuration, "Swapnil P"},
-	{15, time.Thursday, mentorDefaultShiftDuration, "Joey H"},
-	{17, time.Thursday, mentorDefaultShiftDuration, "Jesse L"},
+	{20, time.Wednesday, mentorDefaultShiftDuration, "Alex B"},
+	{14, time.Thursday, mentorDefaultShiftDuration, "Lin L"},
+	{16, time.Thursday, mentorDefaultShiftDuration, "Olivia C"},
+	{18, time.Thursday, mentorDefaultShiftDuration, "Emily Mar."},
 }
 
 func (ms mentorShifts) getMentorsOnDuty() (mentorsOnDuty []mentorShift) {
