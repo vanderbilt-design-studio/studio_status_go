@@ -75,7 +75,10 @@ func initState(s *SignState) (*SignState, error) {
 	spawnSDLEventWaiter()
 	s.LogAndPostChan = spawnLogAndPost()
 	spawnStatsPoster()
-	s.gpio26, _ = hwio.GetPin("gpio26")
+	var err error
+	if s.gpio26, err = hwio.GetPin("gpio26"); err != nil {
+		hwio.PinMode(s.gpio26, hwio.OUTPUT)
+	}
 
 	s.Init = true // Mark as succeeded
 	return s, nil
