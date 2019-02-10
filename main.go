@@ -112,7 +112,7 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		}
 	} else if !s.Open && s.SwitchValue == stateShifts { // Show when the studio opens next if there are shifts today
 		nextShifts := shifts.getNextMentorsOnDutyToday()
-		if len(shifts.getMentorsOnDuty()) > 0 {
+		if len(shifts.getMentorsOnDuty()) > 0 || len(nextShifts) == 0 {
 			// TODO: How to handle a missed shift in between other shifts?
 			// If there is supposed to be a shift right now and it's closed, we know that the opens at time is probably
 			// wrong so we shouldn't misinform the users. What about a shift that is separated from other shifts? Should
