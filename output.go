@@ -3,9 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/sameer/fsm/moore"
-	"github.com/vanderbilt-design-studio/studio-statistics"
-	"github.com/veandco/go-sdl2/sdl"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,6 +13,11 @@ import (
 	"sync/atomic"
 	"syscall"
 	"time"
+
+	"github.com/mrmorphic/hwio"
+	"github.com/sameer/fsm/moore"
+	studio_statistics "github.com/vanderbilt-design-studio/studio-statistics"
+	"github.com/veandco/go-sdl2/sdl"
 )
 
 var signalStateStr atomic.Value
@@ -184,11 +186,11 @@ func (s *SignState) Log(w io.Writer) error {
 }
 
 func (s *SignState) DoRelay() {
-	if s.relayArduino != nil {
+	if s.gpio26 != 0 {
 		if s.Open {
-			s.relayArduino.Write([]byte{relayChange, 2})
+			hwio.DigitalWrite(s.gpio26, 1)
 		} else {
-			s.relayArduino.Write([]byte{relayChange, 0})
+			hwio.DigitalWrite(s.gpio26, 0)
 		}
 	}
 }

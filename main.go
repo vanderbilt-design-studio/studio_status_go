@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/sameer/fsm/moore"
-	"github.com/tarm/serial"
-	"github.com/veandco/go-sdl2/sdl"
-	"github.com/veandco/go-sdl2/ttf"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"time"
+
+	"github.com/mrmorphic/hwio"
+	"github.com/sameer/fsm/moore"
+	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/ttf"
 )
 
 const tick = time.Duration(1000 / 22 * time.Millisecond) // convert ticks per second to useful number
@@ -28,7 +29,7 @@ type SignState struct {
 	Subtitle       string
 	LogAndPostChan chan SignState
 
-	relayArduino *serial.Port
+	gpio26 hwio.Pin
 }
 
 func initState(s *SignState) (*SignState, error) {
@@ -74,7 +75,7 @@ func initState(s *SignState) (*SignState, error) {
 	spawnSDLEventWaiter()
 	s.LogAndPostChan = spawnLogAndPost()
 	spawnStatsPoster()
-	s.relayArduino = AcquireArduinoUID(32)
+	s.gpio26, _ = hwio.GetPin("gpio26")
 
 	s.Init = true // Mark as succeeded
 	return s, nil
@@ -131,9 +132,8 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 
 	if reason := signalStateStr.Load(); reason != "" {
 		fmt.Print("Gracefully shutting down because of \"", reason, "\"...")
-		if s.relayArduino != nil {
-			s.relayArduino.Flush()
-			s.relayArduino.Close()
+		if s.gpio26 != 0 {
+			hwio.ClosePin(s.gpio26)
 		}
 		s.Window.Destroy()
 		for _, font := range s.Fonts {
@@ -148,9 +148,8 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 		sdl.Quit()
 		fmt.Println("done!")
 		return nil, nil
-	} else {
-		return s, nil
 	}
+	return s, nil
 }
 
 func main() {

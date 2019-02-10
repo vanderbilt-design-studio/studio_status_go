@@ -2,45 +2,40 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/mrmorphic/hwio"
 	"github.com/sameer/fsm/moore"
-	"github.com/tarm/serial"
 )
 
 type SignInput struct {
-	isGPIOAvailable bool
-	gpio17, gpio27  hwio.Pin     // BCM Pin 17, 27 (https://pinout.xyz/)
-	doorArduino     *serial.Port // A port for transferring data with the photoresistor sketch
+	gpio17, gpio27 hwio.Pin // BCM Pin 17, 27 (https://pinout.xyz/)
 }
 
 func (si *SignInput) init() {
-	if si.isGPIOAvailable { // Grab the pins if available
-		var err error = nil
-		si.gpio17, err = hwio.GetPin("gpio17")
-		if err != nil {
-			fmt.Println("gpio17 ", err)
-			si.isGPIOAvailable = false
-		}
-		si.gpio27, err = hwio.GetPin("gpio27")
-		if err != nil {
-			fmt.Println("gpio27 ", err)
-			si.isGPIOAvailable = false
-		}
-		if si.isGPIOAvailable {
-			hwio.PinMode(si.gpio17, hwio.INPUT)
-			hwio.PinMode(si.gpio27, hwio.INPUT)
-		}
+	var err error
+
+	si.gpio17, err = hwio.GetPin("gpio17")
+	if si.gpio17 == 0 {
+		fmt.Println("gpio17 ", err)
+	} else {
+		hwio.PinMode(si.gpio17, hwio.INPUT)
 	}
-	si.doorArduino = AcquireArduinoUID(16)
+
+	si.gpio27, err = hwio.GetPin("gpio27")
+	if si.gpio27 == 0 {
+		fmt.Println("gpio27 ", err)
+	} else {
+
+		hwio.PinMode(si.gpio27, hwio.INPUT)
+	}
 }
 
 func (si *SignInput) finish() {
-	if si.isGPIOAvailable {
-		hwio.CloseAll()
+	if si.gpio17 != 0 {
+		hwio.ClosePin(si.gpio17)
 	}
-	if si.doorArduino != nil {
-		si.doorArduino.Flush()
-		si.doorArduino.Close()
+	if si.gpio27 != 0 {
+		hwio.ClosePin(si.gpio27)
 	}
 }
 
@@ -74,7 +69,7 @@ func (si *SignInput) IsOpen() (isOpen, isDoorOpen bool) {
 }
 
 func (si *SignInput) GetSwitchValue() SwitchState {
-	if si.isGPIOAvailable {
+	if si.gpio17 != 0 && si.gpio27 != 0 {
 		// Is this normal open?
 		openOne, err := hwio.DigitalRead(si.gpio17)
 		if err == nil {
@@ -102,47 +97,41 @@ func (si *SignInput) GetSwitchValue() SwitchState {
 	return stateShifts
 }
 
-const (
-	doorSensorReq   = 4
-	motionSensorReq = 8
-	relayChange     = 16
-	identReq        = 32
-)
-
 func (si *SignInput) IsDoorOpen() bool {
-	var buf = make([]byte, 1)
-	if si.doorArduino == nil {
-		return true
-	}
-	si.doorArduino.Write([]byte{doorSensorReq}) // Send a request for photoresistor value
-	bytesRead, err := si.doorArduino.Read(buf)
-	// If we failed to read a value, assume either something is wrong with the hardware
-	// i.e. the Arduino was unplugged. The mentor on duty can override the current value
-	// by switching it to open override.
-	if bytesRead == 0 || err != nil {
-		return true
-	}
-	return buf[0] != 0 // 0 == false aka door closed
+	return true
+	// var buf = make([]byte, 1)
+	// if si.doorArduino == nil {
+	// 	return true
+	// }
+	// si.doorArduino.Write([]byte{doorSensorReq}) // Send a request for photoresistor value
+	// bytesRead, err := si.doorArduino.Read(buf)
+	// // If we failed to read a value, assume either something is wrong with the hardware
+	// // i.e. the Arduino was unplugged. The mentor on duty can override the current value
+	// // by switching it to open override.
+	// if bytesRead == 0 || err != nil {
+	// 	return true
+	// }
+	// return buf[0] != 0 // 0 == false aka door closed
 }
 
 func (si *SignInput) IsThereMotion() bool {
-	var buf = make([]byte, 1)
-	if si.doorArduino == nil {
-		return false
-	}
-	si.doorArduino.Write([]byte{motionSensorReq})
-	bytesRead, err := si.doorArduino.Read(buf)
-	if bytesRead == 0 || err != nil {
-		return false
-	}
-	return buf[0] != 0
+	return false
+	// var buf = make([]byte, 1)
+	// if si.doorArduino == nil {
+	// 	return false
+	// }
+	// si.doorArduino.Write([]byte{motionSensorReq})
+	// bytesRead, err := si.doorArduino.Read(buf)
+	// if bytesRead == 0 || err != nil {
+	// 	return false
+	// }
+	// return buf[0] != 0
 }
 
 var inputState *SignInput
 
 var inputFunction = func() moore.InputFunction {
 	inputState = &SignInput{}
-	inputState.isGPIOAvailable = true
 	inputState.init()
 	return func() moore.Input {
 		return inputState
