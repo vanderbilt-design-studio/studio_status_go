@@ -76,7 +76,7 @@ func initState(s *SignState) (*SignState, error) {
 	s.LogAndPostChan = spawnLogAndPost()
 	spawnStatsPoster()
 	var err error
-	if s.gpio22, err = hwio.GetPin("gpio22"); err != nil {
+	if s.gpio22, err = hwio.GetPin("gpio22"); err == nil {
 		hwio.PinMode(s.gpio22, hwio.OUTPUT)
 	}
 
