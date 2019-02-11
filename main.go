@@ -29,7 +29,7 @@ type SignState struct {
 	Subtitle       string
 	LogAndPostChan chan SignState
 
-	gpio26 hwio.Pin
+	gpio22 hwio.Pin
 }
 
 func initState(s *SignState) (*SignState, error) {
@@ -76,8 +76,8 @@ func initState(s *SignState) (*SignState, error) {
 	s.LogAndPostChan = spawnLogAndPost()
 	spawnStatsPoster()
 	var err error
-	if s.gpio26, err = hwio.GetPin("gpio26"); err != nil {
-		hwio.PinMode(s.gpio26, hwio.OUTPUT)
+	if s.gpio22, err = hwio.GetPin("gpio22"); err != nil {
+		hwio.PinMode(s.gpio22, hwio.OUTPUT)
 	}
 
 	s.Init = true // Mark as succeeded
@@ -135,8 +135,8 @@ var transitionFunction moore.TransitionFunction = func(state moore.State, input 
 
 	if reason := signalStateStr.Load(); reason != "" {
 		fmt.Print("Gracefully shutting down because of \"", reason, "\"...")
-		if s.gpio26 != 0 {
-			hwio.ClosePin(s.gpio26)
+		if s.gpio22 != 0 {
+			hwio.ClosePin(s.gpio22)
 		}
 		s.Window.Destroy()
 		for _, font := range s.Fonts {

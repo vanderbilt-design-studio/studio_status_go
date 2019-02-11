@@ -186,11 +186,11 @@ func (s *SignState) Log(w io.Writer) error {
 }
 
 func (s *SignState) DoRelay() {
-	if s.gpio26 != 0 {
+	if s.gpio22 != 0 {
 		if s.Open {
-			hwio.DigitalWrite(s.gpio26, hwio.HIGH)
+			hwio.DigitalWrite(s.gpio22, hwio.HIGH)
 		} else {
-			hwio.DigitalWrite(s.gpio26, hwio.LOW)
+			hwio.DigitalWrite(s.gpio22, hwio.LOW)
 		}
 	}
 }
