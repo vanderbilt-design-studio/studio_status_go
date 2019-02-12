@@ -56,7 +56,7 @@ func spawnSDLEventWaiter() {
 	}()
 }
 
-const postUrl = "https://ds-sign.yunyul.in"
+const postURL = "https://ds-sign.yunyul.in"
 const logFilename = "activity.log"
 
 func spawnLogAndPost() chan SignState {
@@ -98,8 +98,8 @@ func spawnStatsPoster() {
 		for range tick.C {
 			continue
 			fmt.Println("Beginning post...")
-			xApiKey := os.Getenv("x_api_key")
-			if xApiKey == "" {
+			xAPIKey := os.Getenv("x_api_key")
+			if xAPIKey == "" {
 				fmt.Println("No api key, continuing")
 				continue
 			}
@@ -125,7 +125,7 @@ func spawnStatsPoster() {
 			}
 			req.Header.Add("content-type", "image/png")
 			req.Header.Add("content-length", strconv.Itoa(buf.Len()))
-			req.Header.Add("x-api-key", xApiKey)
+			req.Header.Add("x-api-key", xAPIKey)
 			if _, err := http.DefaultClient.Do(req); err != nil {
 				fmt.Println("Error in trying to post data", err)
 			}
@@ -135,8 +135,8 @@ func spawnStatsPoster() {
 }
 
 func (s *SignState) Post() {
-	xApiKey := os.Getenv("x_api_key")
-	if xApiKey == "" {
+	xAPIKey := os.Getenv("x_api_key")
+	if xAPIKey == "" {
 		return
 	}
 
@@ -162,14 +162,14 @@ func (s *SignState) Post() {
 		s.Subtitle,
 	))
 
-	req, err := http.NewRequest("POST", postUrl, payload)
+	req, err := http.NewRequest("POST", postURL, payload)
 	if err != nil {
 		fmt.Println("Failed to prepare post request:", err)
 		return
 	}
 
 	req.Header.Add("content-type", "application/json")
-	req.Header.Add("x-api-key", xApiKey)
+	req.Header.Add("x-api-key", xAPIKey)
 
 	_, err = http.DefaultClient.Do(req)
 	if err != nil {
@@ -185,6 +185,7 @@ func (s *SignState) Log(w io.Writer) error {
 	return nil
 }
 
+// DoRelay Make the open sign above the door reflect the state of the sign.
 func (s *SignState) DoRelay() {
 	if s.gpio22 != 0 {
 		if s.Open {

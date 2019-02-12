@@ -36,32 +36,33 @@ func initState(s *SignState) (*SignState, error) {
 	// Init to default state
 	if err := sdl.Init(sdl.INIT_VIDEO); err != nil {
 		return nil, err
-	} else {
-		if i, err := sdl.ShowCursor(sdl.QUERY); i == sdl.ENABLE && err == nil {
-			sdl.ShowCursor(sdl.DISABLE)
-			if i, err := sdl.ShowCursor(sdl.QUERY); i == sdl.ENABLE && err != nil {
-				fmt.Println("failed to hide cursor")
-			}
+	}
+
+	if i, err := sdl.ShowCursor(sdl.QUERY); i == sdl.ENABLE && err == nil {
+		sdl.ShowCursor(sdl.DISABLE)
+		if i, err := sdl.ShowCursor(sdl.QUERY); i == sdl.ENABLE && err != nil {
+			fmt.Println("failed to hide cursor")
 		}
 	}
-	if window, rend, err := sdl.CreateWindowAndRenderer(width, height, sdl.WINDOW_FULLSCREEN|sdl.WINDOW_SHOWN|sdl.WINDOW_BORDERLESS); err != nil {
+	window, rend, err := sdl.CreateWindowAndRenderer(width, height, sdl.WINDOW_FULLSCREEN|sdl.WINDOW_SHOWN|sdl.WINDOW_BORDERLESS)
+	if err != nil {
 		return nil, err
-	} else {
-		s.Window, s.Renderer = window, rend
 	}
+	s.Window, s.Renderer = window, rend
+
 	if err := ttf.Init(); err != nil {
 		return nil, err
-	} else {
-		s.Fonts = make(map[int]*ttf.Font)
-		for _, size := range desiredFontSizes {
-			if font, err := ttf.OpenFont(font, size); err != nil {
-				return nil, err
-			} else {
-				font.SetStyle(ttf.STYLE_BOLD)
-				font.SetHinting(ttf.HINTING_MONO)
-				s.Fonts[size] = font
-			}
+	}
+	s.Fonts = make(map[int]*ttf.Font)
+	for _, size := range desiredFontSizes {
+		font, err := ttf.OpenFont(font, size)
+		if err != nil {
+			return nil, err
 		}
+		font.SetStyle(ttf.STYLE_BOLD)
+		font.SetHinting(ttf.HINTING_MONO)
+		s.Fonts[size] = font
+
 	}
 
 	s.BackgroundFill = white
@@ -75,7 +76,7 @@ func initState(s *SignState) (*SignState, error) {
 	spawnSDLEventWaiter()
 	s.LogAndPostChan = spawnLogAndPost()
 	spawnStatsPoster()
-	var err error
+
 	if s.gpio22, err = hwio.GetPin("gpio22"); err == nil {
 		hwio.PinMode(s.gpio22, hwio.OUTPUT)
 	}

@@ -57,6 +57,7 @@ const (
 	stateClosedForced                    // 2
 )
 
+// IsOpen Checks whether the DS should currently be open
 func (si *SignInput) IsOpen() (isOpen, isDoorOpen bool) {
 	// Logic to determine if the studio is likely open.
 	isOpen = len(shifts.getMentorsOnDuty()) > 0
@@ -78,6 +79,7 @@ func (si *SignInput) IsOpen() (isOpen, isDoorOpen bool) {
 	return
 }
 
+// GetSwitchValue Reads gpio 17,27 to check the state of a DPDT switch.
 func (si *SignInput) GetSwitchValue() SwitchState {
 	if si.gpio17 != 0 && si.gpio27 != 0 {
 		// Is this normal open?
@@ -85,19 +87,17 @@ func (si *SignInput) GetSwitchValue() SwitchState {
 		if err == nil {
 			if openOne == hwio.HIGH { // It is indeed.
 				return stateShifts
-			} else {
-				// Is it actually forced open?
-				openTwo, err := hwio.DigitalRead(si.gpio27)
-				if err == nil {
-					if openTwo == hwio.HIGH { // It is indeed.
-						return stateOpenForced
-					} else { // The only other possibility is forced closed.
-						return stateClosedForced
-					}
-				} else {
-					fmt.Println("gpio27 err ", err)
-				}
 			}
+			// Is it actually forced open?
+			openTwo, err := hwio.DigitalRead(si.gpio27)
+			if err == nil {
+				if openTwo == hwio.HIGH { // It is indeed.
+					return stateOpenForced
+				}
+				// The only other possibility is forced closed.
+				return stateClosedForced
+			}
+			fmt.Println("gpio27 err ", err)
 		} else {
 			fmt.Println("gpio17 err ", err)
 		}
@@ -107,18 +107,18 @@ func (si *SignInput) GetSwitchValue() SwitchState {
 	return stateShifts
 }
 
+// IsDoorOpen Checks whether the door is open, using a Reed switch and a magnet connected to the Pi via CAT5e ethernet cable
 func (si *SignInput) IsDoorOpen() bool {
 	if si.gpio26 == 0 {
 		return true
 	}
-
-	if result, err := hwio.DigitalRead(si.gpio26); err != nil {
+	result, err := hwio.DigitalRead(si.gpio26)
+	if err != nil {
 		return true
-	} else {
-		// If the door is open, sensor will output LOW, else HIGH.
-		// If the sensor is disconnected, defaults to LOW which returns the default value.
-		return result == hwio.LOW
 	}
+	// If the door is open, sensor will output LOW, else HIGH.
+	// If the sensor is disconnected, defaults to LOW which returns the default value.
+	return result == hwio.LOW
 }
 
 func (si *SignInput) IsThereMotion() bool {

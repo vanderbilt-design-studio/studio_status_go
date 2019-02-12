@@ -3,11 +3,12 @@ package main
 import (
 	"container/list"
 	"fmt"
-	"github.com/veandco/go-sdl2/sdl"
 	"hash/crc64"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/veandco/go-sdl2/sdl"
 )
 
 const font = "Helvetica-Bold.ttf" // Helvetica font is beautiful for long distance reading.
@@ -58,9 +59,8 @@ func makePluralHandlingMentorString(subtitle string, onDutyText bool) string {
 	}
 	if onDutyText {
 		return fmt.Sprintf(mentorOnDutyStrf, multi)
-	} else {
-		return fmt.Sprintf(mentorPrefixStrf, multi)
 	}
+	return fmt.Sprintf(mentorPrefixStrf, multi)
 }
 
 func (s *SignState) blitWhenOpens() {
