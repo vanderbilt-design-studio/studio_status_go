@@ -9,6 +9,7 @@ import (
 
 type SignInput struct {
 	gpio17, gpio27 hwio.Pin // BCM Pin 17, 27 (https://pinout.xyz/)
+	gpio26         hwio.Pin
 }
 
 func (si *SignInput) init() {
@@ -25,8 +26,14 @@ func (si *SignInput) init() {
 	if si.gpio27 == 0 {
 		fmt.Println("gpio27 ", err)
 	} else {
-
 		hwio.PinMode(si.gpio27, hwio.INPUT)
+	}
+
+	si.gpio26, err = hwio.GetPin("gpio26")
+	if si.gpio26 == 0 {
+		fmt.Println("gpio26 ", err)
+	} else {
+		hwio.PinMode(si.gpio26, hwio.INPUT)
 	}
 }
 
@@ -36,6 +43,9 @@ func (si *SignInput) finish() {
 	}
 	if si.gpio27 != 0 {
 		hwio.ClosePin(si.gpio27)
+	}
+	if si.gpio26 != 0 {
+		hwio.ClosePin(si.gpio26)
 	}
 }
 
@@ -98,34 +108,22 @@ func (si *SignInput) GetSwitchValue() SwitchState {
 }
 
 func (si *SignInput) IsDoorOpen() bool {
-	return true
-	// var buf = make([]byte, 1)
-	// if si.doorArduino == nil {
-	// 	return true
-	// }
-	// si.doorArduino.Write([]byte{doorSensorReq}) // Send a request for photoresistor value
-	// bytesRead, err := si.doorArduino.Read(buf)
-	// // If we failed to read a value, assume either something is wrong with the hardware
-	// // i.e. the Arduino was unplugged. The mentor on duty can override the current value
-	// // by switching it to open override.
-	// if bytesRead == 0 || err != nil {
-	// 	return true
-	// }
-	// return buf[0] != 0 // 0 == false aka door closed
+	if si.gpio26 == 0 {
+		return true
+	}
+
+	if result, err := hwio.DigitalRead(si.gpio26); err != nil {
+		return true
+	} else {
+		// If the door is open, sensor will output LOW, else HIGH.
+		// If the sensor is disconnected, defaults to LOW which returns the default value.
+		return result == hwio.LOW
+	}
 }
 
 func (si *SignInput) IsThereMotion() bool {
+	// Sensor not installed
 	return false
-	// var buf = make([]byte, 1)
-	// if si.doorArduino == nil {
-	// 	return false
-	// }
-	// si.doorArduino.Write([]byte{motionSensorReq})
-	// bytesRead, err := si.doorArduino.Read(buf)
-	// if bytesRead == 0 || err != nil {
-	// 	return false
-	// }
-	// return buf[0] != 0
 }
 
 var inputState *SignInput
