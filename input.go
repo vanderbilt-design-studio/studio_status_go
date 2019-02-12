@@ -9,7 +9,7 @@ import (
 
 type SignInput struct {
 	gpio17, gpio27 hwio.Pin // BCM Pin 17, 27 (https://pinout.xyz/)
-	gpio26         hwio.Pin
+	gpio18         hwio.Pin
 }
 
 func (si *SignInput) init() {
@@ -29,11 +29,11 @@ func (si *SignInput) init() {
 		hwio.PinMode(si.gpio27, hwio.INPUT)
 	}
 
-	si.gpio26, err = hwio.GetPin("gpio26")
-	if si.gpio26 == 0 {
-		fmt.Println("gpio26 ", err)
+	si.gpio18, err = hwio.GetPin("gpio18")
+	if si.gpio18 == 0 {
+		fmt.Println("gpio18 ", err)
 	} else {
-		hwio.PinMode(si.gpio26, hwio.INPUT)
+		hwio.PinMode(si.gpio18, hwio.INPUT)
 	}
 }
 
@@ -44,8 +44,8 @@ func (si *SignInput) finish() {
 	if si.gpio27 != 0 {
 		hwio.ClosePin(si.gpio27)
 	}
-	if si.gpio26 != 0 {
-		hwio.ClosePin(si.gpio26)
+	if si.gpio18 != 0 {
+		hwio.ClosePin(si.gpio18)
 	}
 }
 
@@ -109,10 +109,10 @@ func (si *SignInput) GetSwitchValue() SwitchState {
 
 // IsDoorOpen Checks whether the door is open, using a Reed switch and a magnet connected to the Pi via CAT5e ethernet cable
 func (si *SignInput) IsDoorOpen() bool {
-	if si.gpio26 == 0 {
+	if si.gpio18 == 0 {
 		return true
 	}
-	result, err := hwio.DigitalRead(si.gpio26)
+	result, err := hwio.DigitalRead(si.gpio18)
 	if err != nil {
 		return true
 	}
